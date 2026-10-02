@@ -29,29 +29,33 @@ Topology-first fixes all three:
    artifact — and it is *incrementally updatable*: re-running the generator
    later diffs structural change as the repo evolves.
 
-## Stage 1 — Topology generation
+## Stage 1 — Topology generation (Phase 1)
 
 **Goal:** answer *"what is in this repo and how is it wired?"* before any prose.
 
 1. **Enumerate entity types.** Run `scripts/gen_topology.py`. It detects,
    generically across repo flavors:
-   - top-level directories → **modules**;
+   - top-level directories → **modules** (root-level files land in a `(root)` module);
    - `SKILL.md` → **skill**; `agents/*.md` → **agent**; `commands/*.md` →
      **command**; `.mcp.json` → **connectors**; `agent.yaml` → **managed-agent**;
-   - `pyproject.toml` / `setup.py` / `package.json` / `Cargo.toml` / `go.mod`
-     → **language package**;
-   - `*.py` / `*.sh` scripts → **script**.
+   - `pyproject.toml` / `setup.py` / `setup.cfg` / `package.json` /
+     `Cargo.toml` / `go.mod` → **language package**;
+   - `*.py` / `*.sh` scripts at the repo root and under `scripts/` → **script**.
 2. **Extract dependency edges.** The script scans each entity's primary file
-   for references: `system.file:`, `from_plugin:`, `skills.path:`,
-   `references:`, relative-path tokens, and `import`/`require` statements.
-   It classifies each edge as `source → copy` (synced truth) or `uses`.
+   for references: the keywords `system.file:`, `from_plugin:`, `skills.path:`,
+   `skills:`, `references:`, `src:`, `include:`, `path:`; relative-path tokens
+   (`./x`, `../y`); and bare filenames whose extension is in `TEXT_SUFFIXES`.
+   It classifies each edge as `source → copy` (synced truth) or `uses` —
+   a reference counts as `source → copy` when its own line contains one of
+   `COPY_KEYWORDS` (`system.file`, `from_plugin`, `skills.path`, `skills:`,
+   `copied`, `synced`).
 3. **Human-refine.** Open the generated `topology.md`. Confirm the 2–3 most
    structurally important edges by reading the actual manifests. Fix labels
    so the diagrams tell the *true* story. This refined file is deliverable #1.
 4. **Produce an entity inventory** (count + location per kind) — the map you
    keep open during Stage 2.
 
-## Stage 2 — Module deep-dive (edge-ordered)
+## Stage 2 — Module deep-dive (Phase 2, edge-ordered)
 
 **Goal:** gather grounded evidence, reading *along the edges*, not at random.
 
@@ -69,6 +73,7 @@ Topology-first fixes all three:
 ## Reusable process (copy for any repo)
 
 ```
+Phase 0  scope & output location (default docs/guides/, five target files)
 Phase 1  gen_topology.py <repo> --out docs/guides/topology.md
          → refine edges by reading key manifests
 Phase 2  for node in topo.nodes (sorted by complexity):

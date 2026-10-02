@@ -9,9 +9,9 @@
 {{ONE_PARAGRAPH_POSITIONING}}
 
 Headline capabilities:
-- {{CAPABILITY_1}}
-- {{CAPABILITY_2}}
-- {{CAPABILITY_3}}
+- {{HEADLINE_CAPABILITY_1}}
+- {{HEADLINE_CAPABILITY_2}}
+- {{HEADLINE_CAPABILITY_3}}
 
 ## 2. Metadata snapshot
 

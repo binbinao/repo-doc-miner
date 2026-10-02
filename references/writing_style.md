@@ -27,7 +27,7 @@ Examples:
 - Use fenced code blocks with the correct language tag (`python`, `bash`, `rust`, …).
 - Keep snippets ≤ 30 lines; elide non-essential parts with `# ...` and a comment indicating what was removed.
 - Preserve the original repo's import style (e.g. `import deepxde as dde`).
-- Never invent function names or parameters. If unsure, verify with `search_content` before committing.
+- Never invent function names or parameters. If unsure, verify against the source file (`grep`/read the module) before committing.
 
 ## Tables
 
@@ -54,7 +54,7 @@ Rules:
 
 ## Cross-document references
 
-- `README.md` → links to all three other files in the same folder.
+- `README.md` → links to all four other files in the same folder.
 - `tutorial.md` references concrete sections of `user_guide.md` by anchor ID (Markdown auto-generates from headings).
 - `developer_guide.md` references `user_guide.md` for high-level API semantics; avoids duplicating user-level how-tos.
 

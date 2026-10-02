@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""Scaffold the three-doc output for the repo-doc-miner skill.
+"""Scaffold the five-file doc set for the repo-doc-miner skill.
 
-Creates <repo-root>/<out>/ and materializes the four Markdown templates
-(README, developer_guide, user_guide, tutorial) from the skill's
-assets/templates/ directory, with a single {{PROJECT_NAME}} placeholder
-substituted. All other {{...}} placeholders are intentionally left in
-place so the CodeBuddy agent can fill them during Phase 4 of the
+Creates <repo-root>/<out>/ and materializes the five Markdown templates
+(topology, README, developer_guide, user_guide, tutorial) from the
+skill's assets/templates/ directory, with a single {{PROJECT_NAME}}
+placeholder substituted. All other {{...}} placeholders are intentionally
+left in place so the CodeBuddy agent can fill them during Phase 4 of the
 workflow described in SKILL.md.
+
+Existing template files in the output directory are left untouched unless
+--force is supplied, so a Phase-1 topology.md is never clobbered.
 
 Usage
 -----
@@ -17,15 +20,13 @@ Usage
 
 Exit codes
 ----------
-    0  success
-    1  templates directory not found
-    2  output directory already populated and --force not supplied
+    0  success (files written and/or skipped)
+    1  repo root does not exist, or the templates directory is missing
 """
 
 from __future__ import annotations
 
 import argparse
-import shutil
 import sys
 from pathlib import Path
 
@@ -55,21 +56,19 @@ def materialize(
     out_dir: Path,
     project_name: str,
     force: bool,
-) -> None:
+) -> tuple[list[str], list[str]]:
+    """Write the missing templates; return (written, skipped) file names."""
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    existing = [p for p in out_dir.iterdir() if p.is_file()]
-    overlap = [p for p in existing if p.name in TEMPLATE_FILES]
-    if overlap and not force:
-        names = ", ".join(sorted(p.name for p in overlap))
-        raise SystemExit(
-            f"Refusing to overwrite existing files in {out_dir}: {names}. "
-            "Re-run with --force to overwrite."
-        )
-
+    written: list[str] = []
+    skipped: list[str] = []
     for name in TEMPLATE_FILES:
         src = templates_dir / name
         dst = out_dir / name
+        if dst.exists() and not force:
+            skipped.append(name)
+            print(f"  skipped (exists): {dst}")
+            continue
         text = src.read_text(encoding="utf-8")
         # Substitute only the project-name placeholder; all other
         # {{...}} placeholders are intentionally preserved so the
@@ -77,12 +76,14 @@ def materialize(
         # skill workflow.
         text = text.replace("{{PROJECT_NAME}}", project_name)
         dst.write_text(text, encoding="utf-8")
+        written.append(name)
         print(f"  wrote {dst}")
+    return written, skipped
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Scaffold the repo-doc-miner three-doc output."
+        description="Scaffold the repo-doc-miner five-file doc set."
     )
     parser.add_argument(
         "repo_root",
@@ -102,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Overwrite existing template files in the output directory.",
+        help="Overwrite existing template files in the output directory (default: skip them).",
     )
     args = parser.parse_args(argv)
 
@@ -121,8 +122,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Scaffolding docs for project '{args.project_name}'")
     print(f"  templates: {templates_dir}")
     print(f"  output:    {out_dir}")
-    materialize(templates_dir, out_dir, args.project_name, args.force)
-    print("Done. Next: fill the {{...}} placeholders per SKILL.md workflow.")
+    written, skipped = materialize(templates_dir, out_dir, args.project_name, args.force)
+    print(f"Done. {len(written)} written, {len(skipped)} skipped.")
+    print("Next: fill the {{...}} placeholders per SKILL.md workflow.")
     return 0
 
 

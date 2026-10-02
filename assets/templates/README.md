@@ -1,6 +1,6 @@
 # {{PROJECT_NAME}} 指南中心 / Guide Hub
 
-This folder contains four coordinated documents derived from mining the {{PROJECT_NAME}} source tree using the topology-first workflow:
+This folder contains five coordinated files derived from mining the {{PROJECT_NAME}} source tree using the topology-first workflow (four documents plus this hub):
 
 | File | Audience | Contents |
 | --- | --- | --- |
@@ -10,7 +10,7 @@ This folder contains four coordinated documents derived from mining the {{PROJEC
 | [`tutorial.md`](./tutorial.md) | Learners at any level | 10-chapter "from beginner to expert" walkthrough grounded in `examples/`. |
 
 > Upstream project: {{PROJECT_HOMEPAGE_OR_TODO}}
-> Official docs: {{PROJECT_DOCS_OR_TODO}}
+> Official docs: {{DOCS_URL_OR_TODO}}
 
 ## How these documents were produced
 

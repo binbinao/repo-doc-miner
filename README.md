@@ -8,7 +8,7 @@ produces a coordinated Markdown doc set:
 - `developer_guide.md` — architecture tours, module breakdowns, extension SOPs.
 - `user_guide.md` — installation through advanced user-facing features.
 - `tutorial.md` — a beginner-to-expert, chapter-by-chapter learning path.
-- `README.md` — a navigation hub that links the four documents.
+- `README.md` — a navigation hub that links the other four files.
 
 Every claim is grounded in the actual code, configuration, and examples of the
 target repository — not generic knowledge.
@@ -70,18 +70,20 @@ The skill will:
 
 1. **Generate the topology** with `scripts/gen_topology.py` (Phase 1), then refine the detected edges.
 2. **Deep-dive modules along the edges** to gather grounded evidence (Phase 2).
-3. **Draft and write** the four documents via the templates (Phases 3–4).
+3. **Draft and write** the four documents plus the `README.md` hub via the templates (Phases 3–4).
 4. **Validate** snippet fidelity, edge reality, and Markdown rendering (Phase 5), then hand over (Phase 6).
 
 You can also run the generators manually:
 
 ```bash
-# Stage 1: draw the topology map
+# Phase 1: draw the topology map (--out is resolved against <repo-root>)
 python scripts/gen_topology.py <repo-root> \
     --project-name "<DisplayName>" \
-    --out <repo-root>/docs/guides/topology.md
+    --out <repo-root>/docs/guides/topology.md \
+    [--max-edges 200]
 
-# Stage 4: scaffold the four doc skeletons (fills {{PROJECT_NAME}})
+# Phase 4: scaffold the five doc skeletons (fills {{PROJECT_NAME}};
+# existing files are skipped unless --force is given)
 python scripts/scaffold_docs.py <repo-root> \
     --project-name "<DisplayName>" [--out docs/guides] [--force]
 ```
@@ -92,11 +94,12 @@ python scripts/scaffold_docs.py <repo-root> \
 - **Edge-ordered reading** — understand a single source of truth before its synced copies.
 - **Ground every claim in code** — file paths and symbol names accompany every feature description.
 - **Prefer real snippets** from `examples/` or tests, capped at ~30 lines.
-- **Cross-link** the four documents so any one of them is a valid entry point.
+- **Cross-link** the five files so any one of them is a valid entry point.
 - **Mark unresolved gaps** with `TODO(doc-miner)` instead of fabricating behavior.
 
-See `SKILL.md` for the full six-phase workflow and `references/topology_method.md`
-for the methodology and how to extend the topology detector to new repo families.
+See `SKILL.md` for the full seven-phase workflow (Phase 0–6) and
+`references/topology_method.md` for the methodology and how to extend the
+topology detector to new repo families.
 
 ## License
 
