@@ -51,7 +51,8 @@ No build, lint, format, install, or test commands exist. Only three commands are
 # Phase 1 — mine the target repo (writes only if the path is writable)
 python3 scripts/gen_topology.py <repo-root> \
     --out <repo-root>/docs/guides/topology.md \
-    [--project-name "<DisplayName>"] [--max-edges 200]
+    [--project-name "<DisplayName>"] [--max-edges 200] \
+    [--diff] [--diff-markdown <PATH>]
 
 # Phase 4 — scaffold the five doc skeletons (fills {{PROJECT_NAME}} only; existing files
 # are skipped, so the Phase-1 topology.md is preserved — pass --force to overwrite all five)
@@ -72,9 +73,9 @@ find "$tmp/docs/guides" -name '*.md' | sort
 rm -rf "$tmp"
 ```
 
-Exit codes: `gen_topology.py` → `0` ok, `1` bad repo root or invalid `--max-edges` or unreadable tree, `2` cannot create/write the output file. `scaffold_docs.py` → `0` ok (written and/or skipped), `1` bad repo root / templates missing. Arguments are always positional `<repo-root>`; cwd is never used — a relative `--out` is resolved against `<repo-root>`.
+Exit codes: `gen_topology.py` → `0` ok, `1` bad repo root or invalid `--max-edges` / `--max-entities` or unreadable tree, `2` cannot create/write the output file or the `--diff-markdown` target. `scaffold_docs.py` → `0` ok (written and/or skipped), `1` bad repo root / templates missing. Arguments are always positional `<repo-root>`; cwd is never used — a relative `--out` is resolved against `<repo-root>`, and a relative `--diff-markdown` is resolved against `<out>'s parent`.
 
-`--max-edges` (default 200) caps rendered edges only; it now also rejects values `< 1` (exit 1).
+`--max-edges` (default 200) caps rendered edges only; it rejects values `< 0` (exit 1). `--max-entities` (default 500) caps detected entities the same way. `--diff` prints a Markdown diff to stdout without overwriting `--out`. `--diff-markdown <PATH>` writes the diff body to `<PATH>` and additionally prints to stdout; exit `2` on write failure. The diff body compares both kind counts and per-location changes; per-location comparison is bounded by the previous topology's three-example cap per kind.
 
 ## Code Conventions & Common Patterns
 
@@ -144,4 +145,4 @@ These are real defects in the current tree; fix or avoid echoing them rather tha
 - `rg` (ripgrep) is required by the Phase 5 sweep but is not listed in any prerequisites section beyond `SKILL.md`; treat it as an environment dependency.
 - `gen_topology.py`'s entity/edge detection stays heuristic by design (it reads at most `MAX_FILE_READ` per file and never follows real imports). The human-refinement step in Phase 1 is mandatory, not optional.
 
-Fixes already landed (do not re-report these as open defects): phase count (`SKILL.md` says Phase 0–6 consistently), the five-file vs "three/four documents" drift across `SKILL.md`/`README.md`/`references/`/templates, the scaffolder's overwrite/exit-code contract (now skip-by-default, exit 0), dead code in both scripts, `IGNORE_DIRS`/`_is_ignored` handling of `*.egg-info` plus `.github`, the snippet-cap conflict (≤ 30 lines everywhere), and the undocumented `--max-edges` flag.
+Fixes already landed (do not re-report these as open defects): phase count (`SKILL.md` says Phase 0–6 consistently), the five-file vs "three/four documents" drift across `SKILL.md`/`README.md`/`references/`/templates, the scaffolder's overwrite/exit-code contract (now skip-by-default, exit 0), dead code in both scripts, `IGNORE_DIRS`/`_is_ignored` handling of `*.egg-info` plus `.github` plus `.omp`, the snippet-cap conflict (≤ 30 lines everywhere), the undocumented `--max-edges` flag, the `--diff` early-return bug that dropped location-level changes, the `--diff-markdown <PATH>` flag (file output of the diff body), and the inventory table that used to truncate to the top three per kind (now lists all locations so the diff has a stable prev baseline).

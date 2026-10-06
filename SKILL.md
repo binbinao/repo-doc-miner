@@ -49,7 +49,8 @@ This phase answers *"what is in this repo and how is it wired?"* before any pros
    python scripts/gen_topology.py <repo-root> \
        --out <repo-root>/docs/guides/topology.md \
        [--project-name "<DisplayName>"] \
-       [--max-edges 200] [--max-entities 500] [--verbose] [--diff]
+       [--max-edges 200] [--max-entities 500] [--verbose] \
+       [--diff] [--diff-markdown <PATH>]
    ```
 
    A relative `--out` is resolved against `<repo-root>`.
@@ -58,10 +59,11 @@ This phase answers *"what is in this repo and how is it wired?"* before any pros
    - `--max-edges N` — cap rendered dependency edges; `0` means unlimited (default `200`).
    - `--max-entities N` — cap detected entities; `0` means unlimited (default `500`).
    - `--verbose` — print progress to stderr while scanning.
-   - `--diff` — diff the new entity set against an existing `--out` (if any) and emit it to **stdout** without overwriting `--out`. Use this for incremental topology updates.
+   - `--diff` — diff the new entity set against an existing `--out` (if any) and emit a Markdown diff to **stdout** without overwriting `--out`. Compares both kind counts **and** per-location changes (the location comparison reads the previous `## 3.` inventory table — its locations are capped at three examples per kind, so very large previous topologies can under-report removed locations).
+   - `--diff-markdown <PATH>` — with `--diff`, also write the Markdown diff to `<PATH>`. Relative paths resolve against `<repo-root>/docs/guides/`. Exit `2` if the file cannot be written.
 
    The script detects, generically:
-   - Top-level directories as **modules** (build/vendor dirs such as `.git`, `node_modules`, `dist`, `.github`, and `*.egg-info` are skipped). Files directly at the repo root are grouped into a `(root)` module.
+   - Top-level directories as **modules** (build/vendor dirs such as `.git`, `node_modules`, `dist`, `.github`, `.omp`, and `*.egg-info` are skipped). Files directly at the repo root are grouped into a `(root)` module.
    - Plugin-style entities: `SKILL.md` (skill), `agents/*.md` (agent), `commands/*.md` (command), `.mcp.json` (MCP connector), `agent.yaml` (managed agent).
    - Language packages: `pyproject.toml` / `setup.py` / `setup.cfg` / `package.json` / `Cargo.toml` / `go.mod`.
    - Tooling: `*.py` / `*.sh` scripts at the repo root and under `scripts/`.
