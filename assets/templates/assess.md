@@ -25,14 +25,14 @@
 **Primary audience:** {{PRIMARY_AUDIENCE}} — {{PRIMARY_AUDIENCE_RATIONALE}}
 **Secondary audience (if any):** {{SECONDARY_AUDIENCE_OR_NONE}} — {{SECONDARY_AUDIENCE_RATIONALE_OR_NONE}}
 
-> Detection rubric: [`references/audience_profiling.md`](../../references/audience_profiling.md).
+> Detection rubric: `references/audience_profiling.md`.
 
 ## 3. Where to start reading
 
 **Entry file:** `{{ENTRY_FILE_RELATIVE}}`
 **Jump list:** {{ENTRY_JUMP_LIST}}
 
-> Matrix source: [`references/reading_path_suggestions.md`](../../references/reading_path_suggestions.md).
+> Matrix source: `references/reading_path_suggestions.md`.
 
 ## 4. Reading suggestions
 
