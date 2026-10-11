@@ -7,14 +7,16 @@
 
 | Bucket | One-line definition | Best entry file |
 |---|---|---|
-| **first-time-end-user** | Has the repo installed (or about to) and wants to do a specific thing | `user_guide.md` §1–§11 |
+| **first-time-end-user** | Has the repo installed (or about to) and wants to do a specific thing | `user_guide.md` §1–§11 + §18–§19 |
 | **applied-engineer** | Knows the domain; needs the *recipe* matching their task | `tutorial.md` (matching chapter) |
 | **contributor** | Wants to read source, extend the framework, or submit a PR | `developer_guide.md` (end-to-end) |
 | **auditor** | Reviewing for security, licensing, code-quality, supply-chain risk | `topology.md` §1–§3 + `developer_guide.md` §15 |
 | **learner** | No specific use case yet; wants a guided curriculum | `tutorial.md` Ch. 1 → 10 |
 | **integrator** | Plugging the repo into another system (CI, IDE, automation) | `topology.md` + `developer_guide.md` §4–§5 |
 
-The agent picks **at most two** buckets per target repo (a dominant + a secondary). Picking zero is allowed only when no signal matches; in that case the scaffolder must be invoked with no `--audience` flag (the audience block is omitted from all five files).
+The agent picks **at most two** buckets per target repo (a dominant + a secondary). Picking zero is allowed only when no signal matches; in that case the scaffolder must be invoked with no `--audience` flag.
+
+> Detection rubric: see `assets/templates/_audience_block.md` and the `--audience` flag on `scripts/scaffold_docs.py`. When invoked, the audience block is prefixed onto the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed.
 
 ## Detection signals (on-disk, stdlib only)
 
