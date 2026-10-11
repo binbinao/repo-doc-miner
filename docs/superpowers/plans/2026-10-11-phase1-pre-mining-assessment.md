@@ -72,18 +72,20 @@ Create `references/suitability_signals.md` with the exact content below.
 | **Documentation quality** | existing `docs/` directory size + completeness | none | partial | substantial (≥ 5 Markdown files) |
 | **Test/example presence** | `tests/` or `examples/` directory | neither | one | both |
 
-**Score formula:** raw = sum of the six 0/1/2 columns; rescaled = `round(raw * 5 / 6, 1)`. Bands: `4.0–5.0` = High, `2.0–3.9` = Mid, `0.0–1.9` = Low.
+**Score formula:** raw = sum of the six 0/1/2 columns (range 0–12); rescaled = `round(raw * 5 / 12, 1)` (maps 0–12 → 0–5). Bands: `4.0–5.0` = High (raw ≥ 10), `2.0–3.9` = Mid (raw 5–9), `0.0–1.9` = Low (raw 0–4).
 
 ## Hard vetoes (force score → 0 + emit skip reason)
 
 A repo is **skipped without scoring** when any of the following holds:
 
-1. **Archived** — best-effort detection: presence of `ARCHIVED.md`, `.github/CODEOWNERS` with a "maintainers needed" notice, or a README banner stating the project is archived/no longer maintained.
+1. **Archived** — best-effort detection: presence of `ARCHIVED.md`, or a README banner stating the project is archived/no longer maintained (e.g. `[![No Maintenance Intended](...)](...)`, or the strings `no longer maintained`, `archived`, or `sunset`).
 2. **No license + no usage hint** — `LICENSE` (or `LICENSE.md`) is absent AND the README's first 200 lines contain none of: `Install`, `Usage`, `Quickstart`, `pip install`, `npm install`, `cargo install`, `go install`, `go get`, or a fenced `bash` block.
 3. **Vendor fork** — no top-level source directory exists (only `node_modules/`, `dist/`, `vendor/`, `third_party/`, `*.egg-info/`).
 4. **Too small** — fewer than 3 readable source files remain after applying the script's `IGNORE_DIRS` / `.gitignore` filtering.
 
 When a veto fires, write `> TODO(doc-miner): skip — <veto reason>` to `assess.md` §1 and stop.
+
+**Not-a-git fallback.** If `git log -1 --format=%ct` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1. The other five signals are computed from the on-disk tree and remain valid.
 
 ## "Skip — and why" message template
 
@@ -115,11 +117,11 @@ Expected: `OK`. Any non-zero exit or missing echo is a failure.
 Run:
 ```bash
 ! rg -q '\{\{[A-Z_]+\}\}' references/suitability_signals.md \
-  && ! rg -q '<[a-z-]+>' references/suitability_signals.md \
+  && ! rg -q '<[a-z -]+>' references/suitability_signals.md \
   && echo OK
 ```
 
-Expected: `OK`. Per `references/doc_outlines.md` placeholder convention, content files (not templates) must not carry unsubstituted placeholders.
+Expected: `OK`. Per `references/doc_outlines.md` placeholder convention, content files (not templates) must not carry unsubstituted placeholders. The tightened regex `<[a-z -]+>` matches slots containing spaces (e.g. `<entry file>`), unlike the previous `<[a-z-]+>` which only matched single-word slots.
 
 - [ ] **Step 4: Commit**
 
@@ -153,7 +155,7 @@ Create `references/audience_profiling.md` with the exact content below.
 
 | Bucket | One-line definition | Best entry file |
 |---|---|---|
-| **first-time-end-user** | Has the repo installed (or about to) and wants to do a specific thing | `user_guide.md` §1–§11 |
+| **first-time-end-user** | Has the repo installed (or about to) and wants to do a specific thing | `user_guide.md` §1–§11 + §18–§19 |
 | **applied-engineer** | Knows the domain; needs the *recipe* matching their task | `tutorial.md` (matching chapter) |
 | **contributor** | Wants to read source, extend the framework, or submit a PR | `developer_guide.md` (end-to-end) |
 | **auditor** | Reviewing for security, licensing, code-quality, supply-chain risk | `topology.md` §1–§3 + `developer_guide.md` §15 |
@@ -189,8 +191,8 @@ When signals disagree (e.g., `CONTRIBUTING.md` is present but the README also sc
 The agent writes a 2-line summary at `assess.md` §2:
 
 ```
-**Primary audience:** <bucket> — <one-sentence rationale citing the signal>
-**Secondary audience (if any):** <bucket> — <one-sentence rationale>
+**Primary audience:** the chosen bucket — one-sentence rationale citing the signal
+**Secondary audience (if any):** the chosen bucket — one-sentence rationale
 ```
 ```
 
@@ -213,7 +215,7 @@ Expected: `OK`.
 Run:
 ```bash
 ! rg -q '\{\{[A-Z_]+\}\}' references/audience_profiling.md \
-  && ! rg -q '<[a-z-]+>' references/audience_profiling.md \
+  && ! rg -q '<[a-z -]+>' references/audience_profiling.md \
   && echo OK
 ```
 
@@ -262,9 +264,9 @@ When a hard veto from `suitability_signals.md` fires, the agent skips the matrix
 
 | Audience \\ Band | High | Mid | Low |
 |---|---|---|---|
-| `first-time-end-user` | `user_guide.md` §1–§11 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 only | Skip |
+| `first-time-end-user` | `user_guide.md` §1–§11 + §18–§19 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 + §19 only | Skip |
 | `applied-engineer` | `tutorial.md` (chapter matching the task) | Same, narrower: just the matching chapter + its exercises | Skip |
-| `contributor` | `developer_guide.md` end-to-end + `topology.md` §1–§3 | `developer_guide.md` §1–§14 + `topology.md` §1–§3 | Skip |
+| `contributor` | `developer_guide.md` end-to-end + `topology.md` §1–§3 | Same as High (full `developer_guide.md` + `topology.md` §1–§3) | Skip |
 | `auditor` | `topology.md` + `developer_guide.md` §15 | `topology.md` only | Skip |
 | `learner` | `tutorial.md` Ch. 1 → 10 (sequential) | `tutorial.md` Ch. 1–4, then re-assess | Skip |
 | `integrator` | `topology.md` + `developer_guide.md` §4–§5 | `topology.md` only | Skip |
@@ -305,7 +307,7 @@ Expected: `OK`.
 Run:
 ```bash
 ! rg -q '\{\{[A-Z_]+\}\}' references/reading_path_suggestions.md \
-  && ! rg -q '<[a-z-]+>' references/reading_path_suggestions.md \
+  && ! rg -q '<[a-z -]+>' references/reading_path_suggestions.md \
   && echo OK
 ```
 
@@ -930,13 +932,14 @@ Expected: stdout ends with `Done. 5 written, 0 skipped.` (no `assess.md:` line).
 tmp=$(mktemp -d) && git -C "$tmp" init -q
 python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --audience contributor 2>&1 | tail -2
 rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/topology.md" \
-  && rg -q '^\*\*Audience:\*\* contributor' "$tmp/docs/guides/README.md" \
+  && ! rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/README.md" \
+  && rg -q '^\*\*Audience:\*\* contributor' "$tmp/docs/guides/user_guide.md" \
   && test ! -e "$tmp/docs/guides/assess.md" \
-  && echo "OK: audience block in 5 files, no assess.md"
+  && echo "OK: audience block in 4 non-hub files, README unchanged"
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.`. Each of the 5 generated docs starts with `<!-- audience: contributor -->` followed by `**Audience:** contributor`. `assess.md` is absent.
+Expected: stdout ends with `Done. 5 written, 0 skipped.`. The 4 non-hub files (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) start with `<!-- audience: contributor -->` followed by `**Audience:** contributor`. `README.md` is **not** prefixed. `assess.md` is absent.
 
 - [ ] **Step 7: Smoke test `--assess --audience` together**
 
@@ -979,18 +982,18 @@ Find the line `### Phase 0 · Scope & Output Location` in `SKILL.md`. Insert the
 ```markdown
 ### Phase -1 · Pre-Mining Assessment
 
-> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises [`assess.md`](../../assets/templates/assess.md); `--audience NAME` prefixes the five generated docs with the audience block (`assets/templates/_audience_block.md`). Without either flag the skill behaves exactly as v2.
+> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`). `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
 
 This phase answers four questions **before** any code is read or topology generated:
 
-1. **Is this repo worth mining?** — apply the rubric in [`references/suitability_signals.md`](../../references/suitability_signals.md). Six signals, 0–2 each, rescaled to 0–5. Hard vetoes (archived, no license + no usage hint, vendor fork, < 3 source files) skip without scoring.
-2. **Who is this for?** — pick one or two buckets from [`references/audience_profiling.md`](../../references/audience_profiling.md). Six buckets cover end-users, applied engineers, contributors, auditors, learners, and integrators.
-3. **Where to start reading?** — apply the (audience × suitability-band) matrix in [`references/reading_path_suggestions.md`](../../references/reading_path_suggestions.md).
+1. **Is this repo worth mining?** — apply the rubric in `references/suitability_signals.md`. Six signals, 0–2 each (max raw = 12), rescaled to 0–5 via `round(raw * 5 / 12, 1)`. Hard vetoes (archived, no license + no usage hint, vendor fork, < 3 source files) skip without scoring.
+2. **Who is this for?** — pick one or two buckets from `references/audience_profiling.md`. Six buckets cover end-users, applied engineers, contributors, auditors, learners, and integrators.
+3. **Where to start reading?** — apply the (audience × suitability-band) matrix in `references/reading_path_suggestions.md`.
 4. **What concrete next step?** — write 1–3 imperative actions into `assess.md` §4.
 
 #### Procedure
 
-1. **Materialise the template** with the scaffolder (writes only when `--assess` is passed; the five existing files are untouched unless `--audience` is also passed):
+1. **Materialise the template** with the scaffolder (writes `assess.md` only when `--assess` is passed; the four non-hub docs are prefixed only when `--audience` is also passed):
 
    ```bash
    python scripts/scaffold_docs.py <repo-root> \
@@ -998,11 +1001,11 @@ This phase answers four questions **before** any code is read or topology genera
        --assess [--audience <NAME>]
    ```
 
-3. **Apply the rubric.** Compute the six signals using on-disk facts only (file counts, `git log -1 --format=%ct`, `LICENSE` presence, manifest presence, `docs/` directory size, `tests/` / `examples/` presence). The agent has all of these via standard file-listing tools; no API calls.
-4. **Pick the audience** using the detection signals in `audience_profiling.md` (README first paragraph, presence of `CONTRIBUTING.md` / `examples/` / framework classifiers, etc.). Record a primary + at most one secondary.
-5. **Resolve the entry file and jump list** from the matrix in `reading_path_suggestions.md`.
-6. **Fill `assess.md`.** Substitute every `{{...}}` placeholder with the run's findings; leave any genuinely unknown fact as `> TODO(doc-miner): <missing fact>`. Write the verdict paragraph in §5.
-7. **If a hard veto fires,** replace §1 with a "Skip — and why" paragraph per the template in `suitability_signals.md`, and stop here. Do not start Phase 0.
+2. **Apply the rubric.** Compute the six signals using on-disk facts only (file counts, `git log -1 --format=%ct`, `LICENSE` presence, manifest presence, `docs/` directory size, `tests/` / `examples/` presence). The agent has all of these via standard file-listing tools; no API calls. If `git log` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1.
+3. **Pick the audience** using the detection signals in `audience_profiling.md` (README first paragraph, presence of `CONTRIBUTING.md` / `examples/` / framework classifiers, etc.). Record a primary + at most one secondary.
+4. **Resolve the entry file and jump list** from the matrix in `reading_path_suggestions.md`.
+5. **Fill `assess.md`.** Substitute every `{{...}}` placeholder with the run's findings; leave any genuinely unknown fact as `> TODO(doc-miner): <missing fact>`. Write the verdict paragraph in §5.
+6. **If a hard veto fires,** replace §1 with a "Skip — and why" paragraph per the template in `suitability_signals.md`, and stop here. Do not start Phase 0.
 
 The `assess.md` file is the **first deliverable** of the new flow and is referenced from `README.md` as the entry point for the doc set.
 
