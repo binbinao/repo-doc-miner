@@ -1,10 +1,10 @@
 # {{PROJECT_NAME}} 指南中心 / Guide Hub
 
-This folder contains six coordinated files derived from mining the {{PROJECT_NAME}} source tree using the topology-first workflow (five documents plus this hub). Start with [`assess.md`](./assess.md) — the Phase -1 pre-mining assessment (suitability score, audience, reading path, verdict) produced **before** any of the documents below:
+This folder contains **up to six** coordinated files derived from mining the {{PROJECT_NAME}} source tree using the topology-first workflow (five documents plus this hub). When the scaffolder was invoked with `--assess`, an additional `assess.md` is present — the Phase -1 pre-mining assessment (suitability score, audience, reading path, verdict) produced **before** any of the documents below. Start with `assess.md` if it is present; otherwise jump straight to the file that matches your role in the table below.
 
 | File | Audience | Contents |
 | --- | --- | --- |
-| [`assess.md`](./assess.md) | Everyone (read first) | Phase -1 pre-mining assessment: suitability score + evidence, audience profile, reading path, verdict. Produced before the other docs. |
+| [`assess.md`](./assess.md) *(only when `--assess` was used)* | Everyone (read first if present) | Phase -1 pre-mining assessment: suitability score + evidence, audience profile, reading path, verdict. |
 | [`topology.md`](./topology.md) | Everyone (start here) | Structural map (Mermaid) + entity inventory + dependency edges. The backbone for the other docs. |
 | [`developer_guide.md`](./developer_guide.md) | Framework developers / contributors | Architecture, module tours, extension SOPs, debugging tips. |
 | [`user_guide.md`](./user_guide.md) | End users / applied engineers | Installation, core API, typical workflows, FAQ. |
@@ -26,7 +26,7 @@ first-time-end-user: `user_guide.md` §1–§11 + §18–§19, then `tutorial.md
 
 applied-engineer: `tutorial.md` — the chapter matching your task.
 
-contributor: `developer_guide.md` end to end; cross-reference `user_guide.md` when a user-facing API is discussed.
+contributor: `developer_guide.md` end to end + `topology.md` §1–§3; cross-reference `user_guide.md` when a user-facing API is discussed.
 
 auditor: `topology.md` + `developer_guide.md` §15.
 
