@@ -445,13 +445,13 @@ Create `assets/templates/_audience_block.md` with the exact content below. The f
 
 > **Note for the engineer:** the file ends with a literal blank line so concatenation produces a paragraph break before the original template's `#` heading. Do not strip the trailing blank line.
 
-- [ ] **Step 2: Verify the file exists and contains the comment + table markers**
+- [ ] **Step 2: Verify the file exists and contains the comment + audience blockquote**
 
 Run:
 ```bash
 test -f assets/templates/_audience_block.md \
   && rg -q '^<!-- audience: \{\{AUDIENCE\}\} -->$' assets/templates/_audience_block.md \
-  && rg -q '^\*\*Audience:\*\* \{\{AUDIENCE_LABEL\}\}' assets/templates/_audience_block.md \
+  && rg -q '^> \*\*Audience:\*\* \{\{AUDIENCE_LABEL\}\}' assets/templates/_audience_block.md \
   && echo OK
 ```
 
@@ -935,13 +935,13 @@ tmp=$(mktemp -d) && git -C "$tmp" init -q
 python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --audience contributor 2>&1 | tail -2
 rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/topology.md" \
   && ! rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/README.md" \
-  && rg -q '^\*\*Audience:\*\* contributor' "$tmp/docs/guides/user_guide.md" \
+  && rg -q '^> \*\*Audience:\*\* contributor' "$tmp/docs/guides/user_guide.md" \
   && test ! -e "$tmp/docs/guides/assess.md" \
   && echo "OK: audience block in 4 non-hub files, README unchanged"
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.`. The 4 non-hub files (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) start with `<!-- audience: contributor -->` followed by `**Audience:** contributor`. `README.md` is **not** prefixed. `assess.md` is absent.
+Expected: stdout ends with `Done. 5 written, 0 skipped.`. The 4 non-hub files (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) start with `<!-- audience: contributor -->` followed by the audience blockquote (`> **Audience:** contributor …`). `README.md` is **not** prefixed. `assess.md` is absent.
 
 - [ ] **Step 7: Smoke test `--assess --audience` together**
 

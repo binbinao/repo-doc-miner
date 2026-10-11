@@ -131,9 +131,9 @@ The mapping is a plain table — no logic, agent reads the row.
 |---|---|
 | `scripts/gen_topology.py` | **No change in Phase 1.** The script's job is topology, not assessment. (C5 is in Phase 3.) |
 | `scripts/scaffold_docs.py` | New flags: `--assess` (**default off**; when set, writes `assess.md` from new template) and `--audience <name>` (**default off**; when set, prefixes the 4 non-hub docs — `topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md` — with `_audience_block.md`. `README.md` is the hub and is **not** prefixed; the block's own text references it.) Both flags off by default so existing smoke tests stay green. When `--assess` is used without `--audience`, only `assess.md` is added; the 5 templates are not modified. When `--audience` is used without `--assess`, the 4 non-hub docs are prefixed and `assess.md` is not written. |
-| `assets/templates/_audience_block.md` | New fragment: `<!-- audience: {{AUDIENCE}} -->` followed by a 2-line summary table. Embedded verbatim at the top of each generated doc when `--audience` is set. |
+| `assets/templates/_audience_block.md` | New fragment: `<!-- audience: {{AUDIENCE}} -->` followed by a 2-line audience blockquote (`> **Audience:** {{AUDIENCE_LABEL}} — …`). Embedded verbatim at the top of each generated doc when `--audience` is set. |
 
-The audience block is rendered as an HTML comment + a visible table so both machine readers (to skip it) and humans (to read it) work. The placeholder convention stays `{{...}}` and the agent fills it during Phase 4.
+The audience block is rendered as an HTML comment + a visible blockquote so both machine readers (to skip it) and humans (to read it) work. The placeholder convention stays `{{...}}` and the agent fills it during Phase 4.
 
 ### 5.7 SKILL.md diff summary
 
