@@ -83,7 +83,7 @@ A repo is **skipped without scoring** when any of the following holds:
 3. **Vendor fork** — no top-level source directory exists (only `node_modules/`, `dist/`, `vendor/`, `third_party/`, `*.egg-info/`).
 4. **Too small** — fewer than 3 readable source files remain after applying the script's `IGNORE_DIRS` / `.gitignore` filtering.
 
-When a veto fires, write `> TODO(doc-miner): skip — <veto reason>` to `assess.md` §1 and stop.
+When a veto fires, write `> TODO(doc-miner): skip — <one-line reason naming the veto>` to `assess.md` §1 and stop.
 
 **Not-a-git fallback.** If `git log -1 --format=%ct` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1. The other five signals are computed from the on-disk tree and remain valid.
 
@@ -281,9 +281,9 @@ When the band is Low (no veto) the agent writes one short paragraph naming the w
 
 After picking the entry file, the agent writes 1–3 imperative actions. Templates:
 
-- For High: `Open \`<entry file>\`. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run \`Phase -1\` with a different audience.`
-- For Mid: `Skim \`<entry file>\`'s first 100 lines. If the first concrete API or class matches what you need, proceed; otherwise stop.`
-- For Skip: `<remediation sentence>; re-run \`Phase -1\` afterwards.`
+- For High: `Open the entry file. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run \`Phase -1\` with a different audience.`
+- For Mid: `Skim the entry file's first 100 lines. If the first concrete API or class matches what you need, proceed; otherwise stop.`
+- For Skip: `the remediation sentence; re-run \`Phase -1\` afterwards.`
 
 These are starting points, not fixed wording — adjust per audience when needed (e.g., add `git clone` for an integrator audience).
 ```
