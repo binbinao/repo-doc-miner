@@ -20,7 +20,7 @@
 | `references/audience_profiling.md` | new | Audience taxonomy + how to detect it |
 | `references/reading_path_suggestions.md` | new | Audience × suitability → entry-point mapping |
 | `assets/templates/assess.md` | new | Template the agent fills during Phase -1 |
-| `assets/templates/_audience_block.md` | new | Reusable fragment prefixed to each doc when `--audience` is set |
+| `assets/templates/_audience_block.md` | new | Reusable fragment prefixed to the four non-hub docs when `--audience` is set |
 | `scripts/scaffold_docs.py` | modify | Add `--assess` and `--audience` flags; conditional materialization |
 | `SKILL.md` | modify | New `Phase -1` section + `Prerequisites` + expanded `When NOT to Use` |
 | `AGENTS.md` | modify | Append to "Fixes already landed" list |
@@ -83,7 +83,7 @@ A repo is **skipped without scoring** when any of the following holds:
 3. **Vendor fork** — no top-level source directory exists (only `node_modules/`, `dist/`, `vendor/`, `third_party/`, `*.egg-info/`).
 4. **Too small** — fewer than 3 readable source files remain after applying the script's `IGNORE_DIRS` / `.gitignore` filtering.
 
-When a veto fires, write `> TODO(doc-miner): skip — <one-line reason naming the veto>` to `assess.md` §1 and stop.
+When a veto fires, write a `> TODO(doc-miner): skip — …` marker naming the veto reason to `assess.md` §1 and stop.
 
 **Not-a-git fallback.** If `git log -1 --format=%ct` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1. The other five signals are computed from the on-disk tree and remain valid.
 
@@ -162,7 +162,9 @@ Create `references/audience_profiling.md` with the exact content below.
 | **learner** | No specific use case yet; wants a guided curriculum | `tutorial.md` Ch. 1 → 10 |
 | **integrator** | Plugging the repo into another system (CI, IDE, automation) | `topology.md` + `developer_guide.md` §4–§5 |
 
-The agent picks **at most two** buckets per target repo (a dominant + a secondary). Picking zero is allowed only when no signal matches; in that case the scaffolder must be invoked with no `--audience` flag (the audience block is omitted from all five files).
+The agent picks **at most two** buckets per target repo (a dominant + a secondary). Picking zero is allowed only when no signal matches; in that case the scaffolder must be invoked with no `--audience` flag.
+
+> Detection rubric: see `assets/templates/_audience_block.md` and the `--audience` flag on `scripts/scaffold_docs.py`. When invoked, the audience block is prefixed onto the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed.
 
 ## Detection signals (on-disk, stdlib only)
 
@@ -428,11 +430,11 @@ git commit -m "feat(templates): add assess.md template (Phase -1 deliverable)"
 
 **Interfaces:**
 - Consumes: `{{AUDIENCE}}` placeholder substituted by scaffold_docs.py in Task 7
-- Produces: a fragment that is prepended to each of the 5 generated docs when `--audience` is passed
+- Produces: a fragment that is prepended to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) when `--audience` is passed; `README.md` is the hub and is **not** prefixed
 
 - [ ] **Step 1: Write the file content**
 
-Create `assets/templates/_audience_block.md` with the exact content below. The file is prefixed to every generated doc; the leading `<!-- audience: ... -->` is an HTML comment so renderers do not display it but machine tools can still parse it.
+Create `assets/templates/_audience_block.md` with the exact content below. The file is prefixed to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed. The leading `<!-- audience: ... -->` is an HTML comment so renderers do not display it but machine tools can still parse it.
 
 ```markdown
 <!-- audience: {{AUDIENCE}} -->
@@ -714,12 +716,12 @@ git commit -m "feat(scaffold): add --assess flag (Phase -1)"
 **Files:**
 - Modify: `scripts/scaffold_docs.py`
   - `main` — add `--audience` to argparse; pass it to `materialize`.
-  - `materialize` — accept `audience: str | None`; when set, prepend `_audience_block.md` to each of the 5 written/skipped template files (so re-runs see the same prefix).
+  - `materialize` — accept `audience: str | None`; when set, prepend `_audience_block.md` to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed (so re-runs see the same prefix).
 - Test: scratch directory created and removed in Steps 6–7.
 
 **Interfaces:**
 - Consumes: `_audience_block.md` (created in Task 5), `{{AUDIENCE}}` substituted at write time
-- Produces: each of the 5 generated docs prefixed with the audience block when `--audience` is set; `{{AUDIENCE}}` substituted to the value passed on the CLI
+- Produces: the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) prefixed with the audience block when `--audience` is set; `README.md` is the hub and is **not** prefixed; `{{AUDIENCE}}` substituted to the value passed on the CLI
 
 - [ ] **Step 1: Add `_audience_block.md` to the template directory check (so missing templates surface as errors)**
 
