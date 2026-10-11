@@ -18,9 +18,9 @@ When a hard veto from `suitability_signals.md` fires, the agent skips the matrix
 
 | Audience \\ Band | High | Mid | Low |
 |---|---|---|---|
-| `first-time-end-user` | `user_guide.md` §1–§11 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 only | Skip |
+| `first-time-end-user` | `user_guide.md` §1–§11 + §18–§19 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 + §19 only | Skip |
 | `applied-engineer` | `tutorial.md` (chapter matching the task) | Same, narrower: just the matching chapter + its exercises | Skip |
-| `contributor` | `developer_guide.md` end-to-end + `topology.md` §1–§3 | `developer_guide.md` §1–§14 + `topology.md` §1–§3 | Skip |
+| `contributor` | `developer_guide.md` end-to-end + `topology.md` §1–§3 | Same as High (full `developer_guide.md` + `topology.md` §1–§3) | Skip |
 | `auditor` | `topology.md` + `developer_guide.md` §15 | `topology.md` only | Skip |
 | `learner` | `tutorial.md` Ch. 1 → 10 (sequential) | `tutorial.md` Ch. 1–4, then re-assess | Skip |
 | `integrator` | `topology.md` + `developer_guide.md` §4–§5 | `topology.md` only | Skip |
@@ -35,8 +35,8 @@ When the band is Low (no veto) the agent writes one short paragraph naming the w
 
 After picking the entry file, the agent writes 1–3 imperative actions. Templates:
 
-- For High: `Open \`<entry file>\`. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run \`Phase -1\` with a different audience.`
-- For Mid: `Skim \`<entry file>\`'s first 100 lines. If the first concrete API or class matches what you need, proceed; otherwise stop.`
-- For Skip: `<remediation sentence>; re-run \`Phase -1\` afterwards.`
+- For High: `Open \`the entry file\`. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run \`Phase -1\` with a different audience.`
+- For Mid: `Skim \`the entry file\`'s first 100 lines. If the first concrete API or class matches what you need, proceed; otherwise stop.`
+- For Skip: `the remediation sentence; re-run \`Phase -1\` afterwards.`
 
 These are starting points, not fixed wording — adjust per audience when needed (e.g., add `git clone` for an integrator audience).
