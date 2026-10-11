@@ -11,3 +11,6 @@ __pycache__/
 # target repo's `docs/guides/`. In the skill's own repo they are smoke
 # outputs and would churn on every regeneration; ignore them.
 docs/guides/
+
+# Git worktrees for SDD execution (kept out of the repo)
+.worktrees/
