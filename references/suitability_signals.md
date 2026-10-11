@@ -14,18 +14,20 @@
 | **Documentation quality** | existing `docs/` directory size + completeness | none | partial | substantial (≥ 5 Markdown files) |
 | **Test/example presence** | `tests/` or `examples/` directory | neither | one | both |
 
-**Score formula:** raw = sum of the six 0/1/2 columns; rescaled = `round(raw * 5 / 6, 1)`. Bands: `4.0–5.0` = High, `2.0–3.9` = Mid, `0.0–1.9` = Low.
+**Score formula:** raw = sum of the six 0/1/2 columns (range 0–12); rescaled = `round(raw * 5 / 12, 1)` (maps 0–12 → 0–5). Bands: `4.0–5.0` = High (raw ≥ 10), `2.0–3.9` = Mid (raw 5–9), `0.0–1.9` = Low (raw 0–4).
 
 ## Hard vetoes (force score → 0 + emit skip reason)
 
 A repo is **skipped without scoring** when any of the following holds:
 
-1. **Archived** — best-effort detection: presence of `ARCHIVED.md`, `.github/CODEOWNERS` with a "maintainers needed" notice, or a README banner stating the project is archived/no longer maintained.
+1. **Archived** — best-effort detection: presence of `ARCHIVED.md`, or a README banner stating the project is archived/no longer maintained (e.g. `[![No Maintenance Intended](...)](...)`, or the strings `no longer maintained`, `archived`, or `sunset`).
 2. **No license + no usage hint** — `LICENSE` (or `LICENSE.md`) is absent AND the README's first 200 lines contain none of: `Install`, `Usage`, `Quickstart`, `pip install`, `npm install`, `cargo install`, `go install`, `go get`, or a fenced `bash` block.
 3. **Vendor fork** — no top-level source directory exists (only `node_modules/`, `dist/`, `vendor/`, `third_party/`, `*.egg-info/`).
 4. **Too small** — fewer than 3 readable source files remain after applying the script's `IGNORE_DIRS` / `.gitignore` filtering.
 
-When a veto fires, write `> TODO(doc-miner): skip — <veto reason>` to `assess.md` §1 and stop.
+When a veto fires, write a `> TODO(doc-miner): skip — …` marker naming the veto reason to `assess.md` §1 and stop.
+
+**Not-a-git fallback.** If `git log -1 --format=%ct` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1. The other five signals are computed from the on-disk tree and remain valid.
 
 ## "Skip — and why" message template
 
