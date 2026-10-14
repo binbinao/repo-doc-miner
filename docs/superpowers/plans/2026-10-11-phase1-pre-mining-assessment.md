@@ -1152,7 +1152,9 @@ Expected: `OK`.
 - [ ] **Step 4: Verify the heading sequence is still monotonic (no level skips around the new sections)**
 
 ```bash
-awk '/^## Prerequisites/,/^## Workflow/' SKILL.md | ! rg -q '^### ' && echo OK
+awk '/^## Prerequisites/,/^## Workflow/' SKILL.md > /tmp/sdd-h-span.txt
+! rg -q '^### ' /tmp/sdd-h-span.txt && echo OK
+rm -f /tmp/sdd-h-span.txt
 ```
 
 Expected: `OK`. (Confirms no `###` heading sits between `## Prerequisites` and `## Workflow`.)
