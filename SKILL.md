@@ -33,6 +33,35 @@ Do NOT trigger for: single-file API docs, README refresh only, translation tasks
 
 Follow these seven phases in order (Phase 0–6). Phases 1–2 are the new topology-first core; Phases 3–6 reuse the grounded-writing machinery from v1.
 
+### Phase -1 · Pre-Mining Assessment
+
+> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`). `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
+
+This phase answers four questions **before** any code is read or topology generated:
+
+1. **Is this repo worth mining?** — apply the rubric in `references/suitability_signals.md`. Six signals, 0–2 each (max raw = 12), rescaled to 0–5 via `round(raw * 5 / 12, 1)`. Hard vetoes (archived, no license + no usage hint, vendor fork, < 3 source files) skip without scoring.
+2. **Who is this for?** — pick one or two buckets from `references/audience_profiling.md`. Six buckets cover end-users, applied engineers, contributors, auditors, learners, and integrators.
+3. **Where to start reading?** — apply the (audience × suitability-band) matrix in `references/reading_path_suggestions.md`.
+4. **What concrete next step?** — write 1–3 imperative actions into `assess.md` §4.
+
+#### Procedure
+
+1. **Materialise the template** with the scaffolder (writes `assess.md` only when `--assess` is passed; the four non-hub docs are prefixed only when `--audience` is also passed):
+
+   ```bash
+   python scripts/scaffold_docs.py <repo-root> \
+       --project-name "<DisplayName>" [--out docs/guides] \
+       --assess [--audience <NAME>]
+   ```
+
+2. **Apply the rubric.** Compute the six signals using on-disk facts only (file counts, `git log -1 --format=%ct`, `LICENSE` presence, manifest presence, `docs/` directory size, `tests/` / `examples/` presence). The agent has all of these via standard file-listing tools; no API calls. If `git log` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1.
+3. **Pick the audience** using the detection signals in `audience_profiling.md` (README first paragraph, presence of `CONTRIBUTING.md` / `examples/` / framework classifiers, etc.). Record a primary + at most one secondary.
+4. **Resolve the entry file and jump list** from the matrix in `reading_path_suggestions.md`.
+5. **Fill `assess.md`.** Substitute every `{{...}}` placeholder with the run's findings; leave any genuinely unknown fact as `> TODO(doc-miner): <missing fact>`. Write the verdict paragraph in §5.
+6. **If a hard veto fires,** replace §1 with a "Skip — and why" paragraph per the template in `suitability_signals.md`, and stop here. Do not start Phase 0.
+
+The `assess.md` file is the **first deliverable** of the new flow and is referenced from `README.md` as the entry point for the doc set.
+
 ### Phase 0 · Scope & Output Location
 
 1. Determine the repository root (usually the workspace root).
