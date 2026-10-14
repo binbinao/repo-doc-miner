@@ -138,7 +138,7 @@ The audience block is rendered as an HTML comment + a visible blockquote so both
 ### 5.7 SKILL.md diff summary
 
 - **Phase numbering decision (lock this in):** keep the additive `Phase -1` prefix to avoid breaking all internal references in templates / references / README. Existing `Phase 0–6` numbers stay untouched. The new section in `SKILL.md` is titled `Phase -1 · Pre-Mining Assessment` and listed before `Phase 0`.
-- New `## When NOT to Use` entries informed by the suitability vetoes.
+- New `Do NOT trigger for:` entries (under `## When to Use`) informed by the suitability vetoes.
 - New `## Prerequisites` section (B2 from audit, **also lands in Phase 1** because the assessment itself uses `git log`).
 
 ### 5.8 Test plan

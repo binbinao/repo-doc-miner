@@ -19,7 +19,7 @@ The final deliverables are: `topology.md` (the map), `developer_guide.md`, `user
 
 ## Prerequisites
 
-Tools the skill expects to be on `PATH` before Phase -1 (Pre-Mining Assessment) runs:
+Tools the skill expects on `PATH` before any of its scripts run:
 
 | Tool | Why | Min version |
 |---|---|---|

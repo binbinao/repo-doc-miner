@@ -22,7 +22,7 @@
 | `assets/templates/assess.md` | new | Template the agent fills during Phase -1 |
 | `assets/templates/_audience_block.md` | new | Reusable fragment prefixed to the four non-hub docs when `--audience` is set |
 | `scripts/scaffold_docs.py` | modify | Add `--assess` and `--audience` flags; conditional materialization |
-| `SKILL.md` | modify | New `Phase -1` section + `Prerequisites` + expanded `When NOT to Use` |
+| `SKILL.md` | modify | New `Phase -1` section + `Prerequisites` + expanded `Do NOT trigger for:` list (under `## When to Use`) |
 | `AGENTS.md` | modify | Append to "Fixes already landed" list |
 
 The scaffolder is the only code file touched in this phase; `gen_topology.py` is **not** changed (Phase 3 work).
@@ -1077,7 +1077,7 @@ git commit -m "docs(skill): add Phase -1 Pre-Mining Assessment section"
 
 ---
 
-## Task 9: Add `Prerequisites` section + 4 new `When NOT to Use` entries to `SKILL.md`
+## Task 9: Add `Prerequisites` section + 4 new `Do NOT trigger for:` entries (under `## When to Use`) to `SKILL.md`
 
 **Files:**
 - Modify: `SKILL.md`
@@ -1294,7 +1294,7 @@ git log --oneline -12
 Expected: 11 new commits since the spec commit `0d77051`, in this order (most recent first):
 
 1. `docs(agents): record Phase 1 fixes (Pre-Mining Assessment)`
-2. `docs(skill): add Prerequisites section + 4 When NOT to Use entries`
+2. `docs(skill): add Prerequisites section + 4 Do NOT trigger for entries`
 3. `docs(skill): add Phase -1 Pre-Mining Assessment section`
 4. `feat(scaffold): add --audience flag (Phase -1)`
 5. `feat(scaffold): add --assess flag (Phase -1)`
@@ -1320,7 +1320,7 @@ If any commit is missing or in the wrong order, return to the corresponding task
 | §5.4 suitability scoring (0–2 per signal → 0–5; 4 hard vetoes; usage-hint definition) | Task 1 (full rubric + usage-hint definition) |
 | §5.5 reading paths (audience × band matrix) | Task 3 |
 | §5.6 script changes: scaffold_docs.py adds `--assess` (default off), `--audience` (default off); gen_topology.py unchanged | Tasks 6 + 7; Tasks 6 Steps 5, 7 + 7 Steps 5–7 verify defaults |
-| §5.7 SKILL.md: Phase -1 + When NOT to Use + Prerequisites | Tasks 8 + 9 |
+| §5.7 SKILL.md: Phase -1 + Do NOT trigger for (under `## When to Use`) + Prerequisites | Tasks 8 + 9 |
 | §5.8 test plan | Tasks 6 Step 5, 6 Step 6, 6 Step 7, 7 Steps 5–7, Task 11 |
 | Open Decisions: `<angle-bracket>` slot fate — **deferred to Phase 3** (spec §8) ✓ | not in this plan |
 | Open Decisions: Default audience when none — **defined as "no audience block"** in §5.1 spec ✓ | Task 7 Step 5 verifies absence when no flag |
