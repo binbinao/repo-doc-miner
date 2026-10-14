@@ -39,7 +39,7 @@ There are no subagents, services, caches, or persistence — the data flow is fi
 | Path | Purpose |
 |---|---|
 | `SKILL.md` | Skill manifest + canonical Phase -1..6 workflow, trigger conditions, resource list, failure modes. Change workflow semantics here first. |
-| `scripts/` | The only executable code. `gen_topology.py` (512 lines, entity/edge miner + Mermaid renderer), `scaffold_docs.py` (223 lines, template materializer + Phase -1 `--assess`/`--audience`). |
+| `scripts/` | The only executable code. `gen_topology.py` (722 lines, entity/edge miner + Mermaid renderer), `scaffold_docs.py` (223 lines, template materializer + Phase -1 `--assess`/`--audience`). |
 | `references/` | Phase-scoped methodology docs: `topology_method.md` (why + how, and how to extend the miner), `evidence_checklist.md` (Phase-2 minimum reads, per repo flavor), `doc_outlines.md` (Phase-3 fixed section skeletons), `writing_style.md` (Phase-4 cross-cutting prose law), plus the Phase -1 trio `suitability_signals.md` (worth-mining rubric), `audience_profiling.md` (six-bucket reader taxonomy), `reading_path_suggestions.md` (audience × suitability-band entry matrix). |
 | `assets/templates/` | Markdown skeletons copied verbatim into the target repo: the core five `topology.md`, `README.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`, plus the Phase -1 `assess.md` (materialized only on `--assess`) and the reusable `_audience_block.md` fragment (prepended only on `--audience`). |
 | `README.md` | Human-facing companion to `SKILL.md`: install paths, quick start, design principles. |

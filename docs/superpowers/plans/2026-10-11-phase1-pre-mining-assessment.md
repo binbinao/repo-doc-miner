@@ -4,7 +4,7 @@
 
 **Goal:** Add a Phase -1 "Pre-Mining Assessment" capability to `repo-doc-miner` that, before any topology generation runs, produces an `assess.md` answering "is this repo worth mining, who should read it, and where to start?" with two new optional flags on `scripts/scaffold_docs.py`.
 
-**Architecture:** Three new `references/` files define the rubric (suitability signals, audience taxonomy, reading-path matrix). One new template (`assess.md`) and one reusable fragment (`_audience_block.md`) get materialized only when the user passes `--assess` / `--audience` to the scaffolder. `SKILL.md` gains a `Phase -1` section + a `Prerequisites` block + 4 new "When NOT to Use" entries; `AGENTS.md` bookkeeping is updated in the same commit. No third-party dependencies. Both new flags default to **off**, so the existing smoke test from `AGENTS.md` stays byte-identical.
+**Architecture:** Three new `references/` files define the rubric (suitability signals, audience taxonomy, reading-path matrix). One new template (`assess.md`) and one reusable fragment (`_audience_block.md`) get materialized only when the user passes `--assess` / `--audience` to the scaffolder. `SKILL.md` gains a `Phase -1` section + a `Prerequisites` block + 4 new `Do NOT trigger for:` entries (under `## When to Use`); `AGENTS.md` bookkeeping is updated in the same commit. No third-party dependencies. Both new flags default to **off**, so the existing smoke test from `AGENTS.md` stays byte-identical.
 
 **Tech Stack:** Python 3.8+ stdlib only (`argparse`, `pathlib`, `dataclasses`), Markdown templates.
 
@@ -1294,7 +1294,7 @@ git log --oneline -12
 Expected: 11 new commits since the spec commit `0d77051`, in this order (most recent first):
 
 1. `docs(agents): record Phase 1 fixes (Pre-Mining Assessment)`
-2. `docs(skill): add Prerequisites section + 4 Do NOT trigger for entries`
+2. `docs(skill): add Prerequisites section + 4 When NOT to Use entries`
 3. `docs(skill): add Phase -1 Pre-Mining Assessment section`
 4. `feat(scaffold): add --audience flag (Phase -1)`
 5. `feat(scaffold): add --assess flag (Phase -1)`
