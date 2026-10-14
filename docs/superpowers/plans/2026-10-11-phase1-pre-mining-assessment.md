@@ -507,6 +507,13 @@ When --assess is passed, additionally materializes the Phase -1
 pre-mining assessment deliverable (see references/suitability_signals.md,
 references/audience_profiling.md, references/reading_path_suggestions.md).
 
+When --audience NAME is passed, prefixes the four non-hub generated docs
+(topology.md, developer_guide.md, user_guide.md, tutorial.md) with the
+audience block from assets/templates/_audience_block.md. README.md is
+the hub and is never prefixed. assess.md is also prefixed when --assess
+is passed together with --audience. The block's own text references the
+hub and the Phase -1 rubric files.
+
 Existing template files in the output directory are left untouched unless
 --force is supplied, so a Phase-1 topology.md is never clobbered.
 
@@ -516,19 +523,26 @@ Usage
         --project-name "MyProject" \
         [--out docs/guides] \
         [--force] \
-        [--assess]
+        [--assess] \
+        [--audience NAME]
 
 Exit codes
 ----------
     0  success (files written and/or skipped)
-    1  repo root does not exist, or the templates directory is missing
+    1  repo root does not exist, the templates directory is missing,
+       or assets/templates/_audience_block.md is missing when --audience
+       was passed
+    2  cannot create or write the output file
 """
 ```
 
-Apply this by using the `edit` tool with the existing docstring as `old_string` and the new docstring as `new_string`. Verify the edit landed by running:
+Apply this by using the `edit` tool with the existing docstring as `old_string` and the new docstring as `new_string`. The docstring below also documents the `--audience` flag (Task 7). The ASCII `--` dashes must be used; em-dashes (`—`) are not allowed (the project is ASCII-only). Verify the edit landed by running:
 
 ```bash
-rg -q 'When --assess is passed' scripts/scaffold_docs.py && echo OK
+rg -q 'When --assess is passed' scripts/scaffold_docs.py \
+  && rg -q 'When --audience is passed' scripts/scaffold_docs.py \
+  && rg -q '\-\-audience NAME' scripts/scaffold_docs.py \
+  && echo OK
 ```
 
 Expected: `OK`.
@@ -654,7 +668,7 @@ Find the line `print(f"Done. {len(written)} written, {len(skipped)} skipped.")` 
 Verify:
 
 ```bash
-rg -q 'assess.md: {assess_status}' scripts/scaffold_docs.py && echo OK
+rg -qF 'assess.md: {assess_status}' scripts/scaffold_docs.py && echo OK
 ```
 
 Expected: `OK`.
@@ -673,7 +687,7 @@ test -f "$tmp/docs/guides/topology.md" \
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.` (no `assess.md:` line). The throwaway contains exactly 5 files; `assess.md` is absent.
+Expected: stdout contains the line `Done. 5 written, 0 skipped.` (followed by `Next: fill the {{...}} placeholders per SKILL.md workflow.` — the script always prints this final line, so it appears after the `Done.` line). No `assess.md:` line in the output. The throwaway contains exactly 5 files; `assess.md` is absent.
 
 - [ ] **Step 6: Smoke test the new flag in a throwaway directory**
 
@@ -688,7 +702,7 @@ test -f "$tmp/docs/guides/assess.md" \
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 6 written, 0 skipped.` followed by `  assess.md: written.`. `assess.md` exists in the output directory and contains a substituted `{{PROJECT_NAME}}`; the other 5 templates do **not** mention `{{PROJECT_NAME}}` after substitution.
+Expected: stdout contains the line `Done. 6 written, 0 skipped.` followed by `  assess.md: written.` (and the trailing `Next: fill the {{...}} placeholders per SKILL.md workflow.` line). `assess.md` exists in the output directory and contains a substituted `{{PROJECT_NAME}}`; the other 5 templates do **not** mention `{{PROJECT_NAME}}` after substitution.
 
 - [ ] **Step 7: Verify --assess is idempotent (second run skips, does not overwrite)**
 
@@ -756,17 +770,17 @@ def materialize(
     project_name: str,
     force: bool,
     write_assess: bool = False,
-    audience: str | None = None,
+    audience_prefix: str | None = None,
 ) -> tuple[list[str], list[str]]:
 ```
 
 Verify:
 
 ```bash
-rg -q 'audience: str \| None = None' scripts/scaffold_docs.py && echo OK
+rg -q 'audience_prefix: str \| None = None' scripts/scaffold_docs.py && echo OK
 ```
 
-Expected: `OK`.
+Expected: `OK`. (The earlier `audience: str | None = None` form is superseded by Step 3; the final shipped file uses `audience_prefix`.)
 
 - [ ] **Step 3: Read and substitute the audience block once, then apply it to each template**
 
@@ -802,9 +816,26 @@ def materialize(
 ) -> tuple[list[str], list[str]]:
 ```
 
-Final body (the relevant block):
+Final body (the relevant block). The HUB_FILE constant lives at module scope alongside TEMPLATE_FILES; README.md is the hub and is **never** prefixed, even when `audience_prefix` is set.
 
 ```python
+HUB_FILE = "README.md"  # the hub; never prefixed with the audience block
+
+def materialize(
+    templates_dir: Path,
+    out_dir: Path,
+    project_name: str,
+    force: bool,
+    write_assess: bool = False,
+    audience_prefix: str | None = None,
+) -> tuple[list[str], list[str]]:
+    """Write the missing templates; return (written, skipped) file names.
+
+    When ``write_assess`` is True, also materialize ``assess.md`` (the
+    Phase -1 deliverable). When ``audience_prefix`` is set, prefix every
+    written file (except the HUB_FILE) with it. ``assess.md`` is also
+    prefixed when both flags are set.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
 
     written: list[str] = []
@@ -822,7 +853,7 @@ Final body (the relevant block):
         # agent can fill them with evidence from Phase 2 of the
         # skill workflow.
         text = text.replace("{{PROJECT_NAME}}", project_name)
-        if audience_prefix:
+        if audience_prefix and name != HUB_FILE:
             text = audience_prefix + text
         dst.write_text(text, encoding="utf-8")
         written.append(name)
@@ -925,7 +956,7 @@ test ! -e "$tmp/docs/guides/assess.md" \
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.` (no `assess.md:` line). `assess.md` absent; `topology.md` has no `<!-- audience:` comment.
+Expected: stdout contains the line `Done. 5 written, 0 skipped.` (followed by `Next: fill the {{...}} placeholders per SKILL.md workflow.`). No `assess.md:` line in the output. `assess.md` absent; `topology.md` has no `<!-- audience:` comment.
 
 - [ ] **Step 6: Smoke test the `--audience` flag alone**
 
@@ -940,7 +971,7 @@ rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/topology.md" \
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.`. The 4 non-hub files (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) start with `<!-- audience: contributor -->` followed by the audience blockquote (`> **Audience:** contributor …`). `README.md` is **not** prefixed. `assess.md` is absent.
+Expected: stdout contains the line `Done. 5 written, 0 skipped.` (and the trailing `Next: fill the {{...}} placeholders per SKILL.md workflow.` line). The 4 non-hub files (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) start with `<!-- audience: contributor -->` followed by the audience blockquote (`> **Audience:** contributor …`). `README.md` is **not** prefixed. `assess.md` is absent.
 
 - [ ] **Step 7: Smoke test `--assess --audience` together**
 
@@ -953,7 +984,7 @@ rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/assess.md" \
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 6 written, 0 skipped.` followed by `  assess.md: written.`. `assess.md` starts with the audience comment and contains the substituted project name.
+Expected: stdout contains the line `Done. 6 written, 0 skipped.` followed by `  assess.md: written.` (and the trailing `Next: fill the {{...}} placeholders per SKILL.md workflow.` line). `assess.md` starts with the audience comment and contains the substituted project name.
 
 - [ ] **Step 8: Commit**
 
