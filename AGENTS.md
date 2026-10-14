@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-`repo-doc-miner` is a **CodeBuddy / Claude-Code compatible Skill** (v2.0.0) — not a library or application. It is a prompt-and-tooling package that mines a **target** Git repository and generates a coordinated five-file Markdown doc set into that target's `docs/guides/`.
+`repo-doc-miner` is a **CodeBuddy / Claude-Code compatible Skill** (v2.0.0) — not a library or application. It is a prompt-and-tooling package that mines a **target** Git repository and generates a coordinated five-file Markdown doc set into that target's `docs/guides/` (an optional sixth file, `assess.md`, is added when Phase -1 is enabled).
 
-`SKILL.md` is the entry point: an agent auto-discovers it via frontmatter (`name`, `description`, `version`) and follows its seven-phase workflow (Phase 0–6). There is no runtime API, no package manifest, no build, and no test suite. The only executable surface is two stdlib-only Python scripts that **write files into the target repo**.
+`SKILL.md` is the entry point: an agent auto-discovers it via frontmatter (`name`, `description`, `version`) and follows its eight-phase workflow (Phase -1, then Phase 0–6; Phase -1 is opt-in). There is no runtime API, no package manifest, no build, and no test suite. The only executable surface is two stdlib-only Python scripts that **write files into the target repo**.
 
 Two-stage method (the core idea): **topology-first → module-deep-dive**. Draw the entity/dependency map first, then read modules *along the dependency edges* so a capability is understood at its source before its synced copies.
 
@@ -13,12 +13,13 @@ Two-stage method (the core idea): **topology-first → module-deep-dive**. Draw 
 ## Architecture & Data Flow
 
 ```
-SKILL.md (manifest + Phase 0-6 workflow)
+SKILL.md (manifest + Phase -1..6 workflow)
    │
+   ├─ Phase -1 [opt-in] references/{suitability_signals,audience_profiling,reading_path_suggestions}.md ──> <target>/docs/guides/assess.md  (optional deliverable)
    ├─ Phase 1  scripts/gen_topology.py ──> <target>/docs/guides/topology.md   (deliverable #1, refined by hand)
    ├─ Phase 2  references/evidence_checklist.md + topology_method.md  ──> scratch note (not a deliverable)
    ├─ Phase 3  references/doc_outlines.md ──> per-document content plan
-   ├─ Phase 4  scripts/scaffold_docs.py + assets/templates/* ──> 5 files, then filled in place
+   ├─ Phase 4  scripts/scaffold_docs.py + assets/templates/* ──> 5 files (+ optional assess.md), then filled in place
    ├─ Phase 5  validation gates (see Testing & QA)
    └─ Phase 6  handover summary (paths, line counts, coverage, open TODOs)
 ```
@@ -37,17 +38,22 @@ There are no subagents, services, caches, or persistence — the data flow is fi
 
 | Path | Purpose |
 |---|---|
-| `SKILL.md` | Skill manifest + canonical Phase 0–6 workflow, trigger conditions, resource list, failure modes. Change workflow semantics here first. |
-| `scripts/` | The only executable code. `gen_topology.py` (512 lines, entity/edge miner + Mermaid renderer), `scaffold_docs.py` (132 lines, template materializer). |
-| `references/` | Phase-scoped methodology docs: `topology_method.md` (why + how, and how to extend the miner), `evidence_checklist.md` (Phase-2 minimum reads, per repo flavor), `doc_outlines.md` (Phase-3 fixed section skeletons), `writing_style.md` (Phase-4 cross-cutting prose law). |
-| `assets/templates/` | Five Markdown skeletons copied verbatim into the target repo: `topology.md`, `README.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`. |
+| `SKILL.md` | Skill manifest + canonical Phase -1..6 workflow, trigger conditions, resource list, failure modes. Change workflow semantics here first. |
+| `scripts/` | The only executable code. `gen_topology.py` (512 lines, entity/edge miner + Mermaid renderer), `scaffold_docs.py` (223 lines, template materializer + Phase -1 `--assess`/`--audience`). |
+| `references/` | Phase-scoped methodology docs: `topology_method.md` (why + how, and how to extend the miner), `evidence_checklist.md` (Phase-2 minimum reads, per repo flavor), `doc_outlines.md` (Phase-3 fixed section skeletons), `writing_style.md` (Phase-4 cross-cutting prose law), plus the Phase -1 trio `suitability_signals.md` (worth-mining rubric), `audience_profiling.md` (six-bucket reader taxonomy), `reading_path_suggestions.md` (audience × suitability-band entry matrix). |
+| `assets/templates/` | Markdown skeletons copied verbatim into the target repo: the core five `topology.md`, `README.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`, plus the Phase -1 `assess.md` (materialized only on `--assess`) and the reusable `_audience_block.md` fragment (prepended only on `--audience`). |
 | `README.md` | Human-facing companion to `SKILL.md`: install paths, quick start, design principles. |
 
 ## Development Commands
 
-No build, lint, format, install, or test commands exist. Only three commands are real:
+No build, lint, format, install, or test commands exist. Only these commands are real:
 
 ```bash
+# Phase -1 [opt-in] — materialize assess.md and/or prefix the audience block
+python3 scripts/scaffold_docs.py <repo-root> \
+    --project-name "<DisplayName>" [--out docs/guides] \
+    [--assess] [--audience <NAME>]
+
 # Phase 1 — mine the target repo (writes only if the path is writable)
 python3 scripts/gen_topology.py <repo-root> \
     --out <repo-root>/docs/guides/topology.md \
@@ -73,9 +79,9 @@ find "$tmp/docs/guides" -name '*.md' | sort
 rm -rf "$tmp"
 ```
 
-Exit codes: `gen_topology.py` → `0` ok, `1` bad repo root or invalid `--max-edges` / `--max-entities` or unreadable tree, `2` cannot create/write the output file or the `--diff-markdown` target. `scaffold_docs.py` → `0` ok (written and/or skipped), `1` bad repo root / templates missing. Arguments are always positional `<repo-root>`; cwd is never used — a relative `--out` is resolved against `<repo-root>`, and a relative `--diff-markdown` is resolved against `<out>'s parent`.
+Exit codes: `gen_topology.py` → `0` ok, `1` bad repo root or invalid `--max-edges` / `--max-entities` or unreadable tree, `2` cannot create/write the output file or the `--diff-markdown` target. `scaffold_docs.py` → `0` ok (written and/or skipped), `1` repo root absent, templates directory missing, `_audience_block.md` missing, or the audience block unreadable. A missing `assess.md` template under `--assess` is a soft failure: the error goes to stderr and the script still exits `0` (see "Known inconsistencies to not propagate"). Arguments are always positional `<repo-root>`; cwd is never used — a relative `--out` is resolved against `<repo-root>`, and a relative `--diff-markdown` is resolved against `<out>'s parent`.
 
-`--max-edges` (default 200) caps rendered edges only; it rejects values `< 0` (exit 1). `--max-entities` (default 500) caps detected entities the same way. `--diff` prints a Markdown diff to stdout without overwriting `--out`. `--diff-markdown <PATH>` writes the diff body to `<PATH>` and additionally prints to stdout; exit `2` on write failure. The diff body compares both kind counts and per-location changes; per-location comparison is bounded by the previous topology's three-example cap per kind.
+`--max-edges` (default 200) caps rendered edges only; it rejects values `< 0` (exit 1). `--max-entities` (default 500) caps detected entities the same way. `--diff` prints a Markdown diff to stdout without overwriting `--out`. `--diff-markdown <PATH>` writes the diff body to `<PATH>` and additionally prints to stdout; exit `2` on write failure. The diff body compares both kind counts and per-location changes; per-location comparison is bounded by the previous topology's three-example cap per kind. `--assess` additionally materializes `assess.md` (opt-in; absent by default). `--audience <NAME>` prepends `assets/templates/_audience_block.md` (with `{{AUDIENCE}}` and `{{PROJECT_NAME}}` substituted) to the four non-hub generated docs and, when `--assess` is also set, to `assess.md`; `README.md` is the hub and is never prefixed.
 
 ## Code Conventions & Common Patterns
 
@@ -99,7 +105,7 @@ Doc-prose conventions live in `references/writing_style.md` and apply to anythin
 - Unresolved facts get `` > TODO(doc-miner): <missing fact> ``; never fabricate behavior.
 - Match the language of the target repo's existing `docs/`; bilingual → language of the user's latest query. No marketing adjectives.
 
-Placeholders: `{{UPPER_SNAKE_CASE}}` everywhere, plus `<angle-bracket>` slots in `topology.md` only. `scaffold_docs.py` substitutes **only** `{{PROJECT_NAME}}`; every other placeholder is deliberately left for the agent to fill in Phase 4. The naming families and suffix conventions are enumerated in `references/doc_outlines.md` (`## Placeholder conventions`). No YAML front-matter, no HTML comments, no templating engine.
+Placeholders: `{{UPPER_SNAKE_CASE}}` everywhere, plus `<angle-bracket>` slots in `topology.md` only. `scaffold_docs.py` substitutes `{{PROJECT_NAME}}` (and `{{AUDIENCE}}` inside the `_audience_block.md` fragment when `--audience` is passed); every other placeholder is deliberately left for the agent to fill in Phase 4. The naming families and suffix conventions are enumerated in `references/doc_outlines.md` (`## Placeholder conventions`). No YAML front-matter and no templating engine; the single exception to the no-HTML-comments rule is the machine-readable `<!-- audience: {{AUDIENCE}} -->` marker that begins `assets/templates/_audience_block.md`.
 
 ## Important Files
 
@@ -107,7 +113,7 @@ Placeholders: `{{UPPER_SNAKE_CASE}}` everywhere, plus `<angle-bracket>` slots in
 |---|---|
 | `SKILL.md` | Trigger conditions, phase sequence, and failure modes. `description` in frontmatter is what makes the skill fire. |
 | `scripts/gen_topology.py` | Entity/edge detection (`detect_entities`, `detect_edges`, `_assign_ids`, `_is_ignored`, `_REF_PATTERN`, `COPY_KEYWORDS`, `IGNORE_DIRS`, `TEXT_SUFFIXES`) and Markdown rendering (`build_structural_graph`, `build_edge_graph`, `render_markdown`). |
-| `scripts/scaffold_docs.py` | `TEMPLATE_FILES`, `locate_templates_dir`, `materialize` (returns `(written, skipped)`) — the template↔output filename contract. |
+| `scripts/scaffold_docs.py` | `TEMPLATE_FILES` + `HUB_FILE`, `locate_templates_dir`, `materialize` (returns `(written, skipped)`; Phase -1 params `write_assess` / `audience_prefix`) — the template↔output filename contract. |
 | `assets/templates/topology.md` | Shape contract for generated topology output; mirrors `render_markdown`. |
 | `references/writing_style.md` | Single source of truth for citation form, snippet caps, TODO markers, link rules. |
 | `references/topology_method.md` | Canonical pipeline pseudocode (its `Phase 0..6` block) and the script-extension guide. |
@@ -118,8 +124,8 @@ Name collision to watch: this root `README.md`, `assets/templates/README.md`, an
 ## Runtime/Tooling Preferences
 
 - **Bare `python` / `python3` only.** No virtualenv, no `requirements.txt`, no packaging. `.gitignore` covers `.venv/` (not `venv/`) and `__pycache__/`.
-- **No minimum Python version is declared** anywhere. The scripts target 3.8+-compatible stdlib; local bytecode is `cpython-314`. Do not introduce 3.12+-only syntax without updating `SKILL.md`.
-- **`rg` (ripgrep) is required** by the Phase 5 verification step (`rg "TODO\(doc-miner\)"`) but is not listed in any prerequisites section — treat it as an environment dependency when running the workflow.
+- **Minimum Python version:** `SKILL.md`'s `## Prerequisites` declares `python3 >= 3.8` (added with Phase -1). The scripts target 3.8+-compatible stdlib; local bytecode is `cpython-314`. Do not introduce 3.12+-only syntax without updating `SKILL.md`.
+- **`rg` (ripgrep) is required** by the Phase 5 verification step (`rg "TODO\(doc-miner\)"`); `SKILL.md`'s `## Prerequisites` now declares it (added with Phase -1). Treat it as an environment dependency elsewhere.
 - **`search_content` / `search_file`** are CodeBuddy agent-provided tools, not part of this package. The docs previously assumed they were always available; Phase 5 now says to fall back to whatever file-listing/read tool the host agent provides.
 - **Installation** is directory-copy: `.codebuddy/skills/repo-doc-miner/` (project- or user-scoped under `~/.codebuddy/skills/`). No Claude Code path is documented despite the "Claude-Code compatible" claim.
 - **Target-machine assumption:** the scripts run against arbitrary repos, so any new detection logic must skip binaries, cap reads, and never assume a referenced path resolves.
@@ -130,10 +136,10 @@ There is **no test framework, no CI, and no linter**. Do not add or claim one; v
 
 Verification gates to run before claiming a change works:
 
-1. **Smoke-test both scripts in a throwaway repo** (command block above). Assert: `gen_topology.py` exits 0 and writes `topology.md` with `## 1..4` headings; a second run is byte-identical (reproducible ordering); `scaffold_docs.py` without `--force` exits 0, prints `skipped (exists)` for `topology.md`, and leaves that file byte-identical; with `--force` it rewrites all five files and no `{{PROJECT_NAME}}` remains.
+1. **Smoke-test both scripts in a throwaway repo** (command block above). Assert: `gen_topology.py` exits 0 and writes `topology.md` with `## 1..4` headings; a second run is byte-identical (reproducible ordering); `scaffold_docs.py` without `--force` exits 0, prints `skipped (exists)` for `topology.md`, and leaves that file byte-identical; with `--force` it rewrites all five files and no `{{PROJECT_NAME}}` remains. With `--assess` it writes a sixth file, `assess.md`; with `--audience <NAME>` the four non-hub docs gain the `<!-- audience: NAME -->` block while `README.md` stays unprefixed; with neither flag the output is byte-identical to the pre-Phase -1 scaffolder.
 2. **`rg "TODO\(doc-miner\)"` sweep** over generated output — every remaining hit must be either a known gap listed in the handover summary or the trailing cleanup marker that is meant to be removed.
 3. **Phase 5 checklist** from `SKILL.md`: spot-check 5 random snippets against real source paths/signatures; confirm every module named in the developer guide exists; verify the 2–3 most important topology edges against real manifests; confirm Markdown renders (monotonic headings, closed fences, valid relative links, well-formed Mermaid).
-4. **Template contract:** after editing `assets/templates/`, re-run the scaffolder and confirm `TEMPLATE_FILES` still resolves all five names and the placeholder set is unchanged in kind.
+4. **Template contract:** after editing `assets/templates/`, re-run the scaffolder and confirm `TEMPLATE_FILES` still resolves all five names, `assess.md` / `_audience_block.md` still resolve under `--assess` / `--audience`, and the placeholder set is unchanged in kind.
 
 Keep behavior-proving edits grounded: detection heuristics in `gen_topology.py` are explicitly heuristic and expected to be human-refined, so assert observable script output, not inferred graph quality.
 
@@ -142,7 +148,10 @@ Keep behavior-proving edits grounded: detection heuristics in `gen_topology.py` 
 These are real defects in the current tree; fix or avoid echoing them rather than treating them as spec:
 
 - Templates and `references/evidence_checklist.md` are specialized for Python ML/PINN-shaped libraries (DeepXDE-flavored sections: backend abstraction, networks catalog, PDE constraints). Adapting to other repo flavors means adding rows to the checklist and sections to the templates, not rewriting existing ones.
-- `rg` (ripgrep) is required by the Phase 5 sweep but is not listed in any prerequisites section beyond `SKILL.md`; treat it as an environment dependency.
+- `rg` (ripgrep) is required by the Phase 5 sweep; it is now declared in `SKILL.md`'s `## Prerequisites` (added with Phase -1), but downstream consumers should still treat it as an environment dependency.
+- `scaffold_docs.py` under `--assess` treats a missing `assets/templates/assess.md` as a soft failure: it prints `error: --assess requested but … is missing` to stderr and still exits `0`, unlike the missing-templates-dir and missing-`_audience_block.md` paths which exit `1`. Decide-and-document before relying on that exit code.
 - `gen_topology.py`'s entity/edge detection stays heuristic by design (it reads at most `MAX_FILE_READ` per file and never follows real imports). The human-refinement step in Phase 1 is mandatory, not optional.
 
-Fixes already landed (do not re-report these as open defects): phase count (`SKILL.md` says Phase 0–6 consistently), the five-file vs "three/four documents" drift across `SKILL.md`/`README.md`/`references/`/templates, the scaffolder's overwrite/exit-code contract (now skip-by-default, exit 0), dead code in both scripts, `IGNORE_DIRS`/`_is_ignored` handling of `*.egg-info` plus `.github` plus `.omp`, the snippet-cap conflict (≤ 30 lines everywhere), the undocumented `--max-edges` flag, the `--diff` early-return bug that dropped location-level changes, the `--diff-markdown <PATH>` flag (file output of the diff body), and the inventory table that used to truncate to the top three per kind (now lists all locations so the diff has a stable prev baseline).
+Fixes already landed (do not re-report these as open defects): phase count (`SKILL.md` states its phase range consistently), the five-file vs "three/four documents" drift across `SKILL.md`/`README.md`/`references/`/templates, the scaffolder's overwrite/exit-code contract (now skip-by-default, exit 0), dead code in both scripts, `IGNORE_DIRS`/`_is_ignored` handling of `*.egg-info` plus `.github` plus `.omp`, the snippet-cap conflict (≤ 30 lines everywhere), the undocumented `--max-edges` flag, the `--diff` early-return bug that dropped location-level changes, the `--diff-markdown <PATH>` flag (file output of the diff body), and the inventory table that used to truncate to the top three per kind (now lists all locations so the diff has a stable prev baseline).
+
+Phase 1 (Pre-Mining Assessment, 2026-10-11): the missing `Phase -1` "is this repo worth mining, who is it for, and where to start reading?" gating stage is now a documented part of the workflow with three references (`suitability_signals.md`, `audience_profiling.md`, `reading_path_suggestions.md`), an `assets/templates/assess.md` deliverable, an `assets/templates/_audience_block.md` fragment, two new optional scaffolder flags (`--assess`, `--audience`), and an explicit `## Prerequisites` section in `SKILL.md` declaring `python3 >= 3.8`, `git`, and `rg` as required tools (B2 from the 2026-10-11 audit is now closed).
