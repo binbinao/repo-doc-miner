@@ -1013,7 +1013,7 @@ Find the line `### Phase 0 · Scope & Output Location` in `SKILL.md`. Insert the
 ```markdown
 ### Phase -1 · Pre-Mining Assessment
 
-> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`). `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
+> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`) and, when `--assess` is also set, prefixes `assess.md` itself. `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
 
 This phase answers four questions **before** any code is read or topology generated:
 
@@ -1105,7 +1105,7 @@ Find the existing `## Overview` heading in `SKILL.md` and after its closing para
 ```markdown
 ## Prerequisites
 
-Tools the skill expects to be on `PATH` before Phase -1 (Pre-Mining Assessment) runs:
+Tools the skill expects on `PATH` before any of its scripts run:
 
 | Tool | Why | Min version |
 |---|---|---|
@@ -1129,7 +1129,7 @@ Expected: `OK`.
 
 - [ ] **Step 3: Add 4 new entries to the `Do NOT trigger for:` list**
 
-Find the existing 4-item bulleted list under `Do NOT trigger for:`. Append 4 new items **after** the last existing bullet (but before the next `## Workflow` heading). The exact new bullets are:
+Find the existing `Do NOT trigger for:` sentence under `## When to Use`. Convert it to a Markdown lead-in: `Do NOT trigger for any of the following:` (preserve the existing 4 cases as the first 4 bullets, then append the 4 new items below). All 8 bullets must appear in a single list before the next `## Workflow` heading. The exact new bullets to append are:
 
 ```markdown
 - The repo is **archived** or explicitly "no longer maintained" (see `references/suitability_signals.md` hard veto).
@@ -1291,7 +1291,7 @@ Expected: empty output (no untracked files, no staged changes).
 git log --oneline -12
 ```
 
-Expected: 11 new commits since the spec commit `0d77051`, in this order (most recent first):
+Expected: ~30 commits since the base commit `679db76` (which is the most recent commit before Phase 1 work started). The list below shows the **subset of spec-mandated commits** in their original order (most recent first); additional review-fix and lockstep commits will be interleaved in `git log` between them. The 10 spec-mandated commits, in their original order, are:
 
 1. `docs(agents): record Phase 1 fixes (Pre-Mining Assessment)`
 2. `docs(skill): add Prerequisites section + 4 When NOT to Use entries`

@@ -194,7 +194,7 @@ Produce a short final summary containing:
 ### scripts/
 
 - `scripts/gen_topology.py` — **new in v2.** Scans a repo, detects entity types and dependency edges, and writes a Mermaid-backed `topology.md` (structural graph + dependency-edge graph + entity inventory + per-module deep-dive scaffold). Heuristic but safe on arbitrary repos. Run it at the start of Phase 1.
-- `scripts/scaffold_docs.py` — creates `<repo>/docs/guides/` and materializes the five document templates from `assets/templates/` with their `{{PROJECT_NAME}}` placeholder substituted (existing files are skipped unless `--force` is passed). Run at the start of Phase 4.
+- `scripts/scaffold_docs.py` — creates `<repo>/docs/guides/` and materializes the five document templates from `assets/templates/` with their `{{PROJECT_NAME}}` placeholder substituted (existing files are skipped unless `--force` is passed). Run at the start of Phase 4. Accepts two opt-in flags: `--assess` (materialise `assess.md`) and `--audience NAME` (prefix the four non-hub docs with `_audience_block.md`); both are off by default, so a v2 behaviour is preserved when neither is passed.
 
 ### assets/templates/
 
@@ -204,7 +204,9 @@ Markdown skeletons carrying a fixed section schema. Use them as the literal star
 - `assets/templates/developer_guide.md` — 15-section schema (overview → architecture → module tours → extension SOPs → debugging).
 - `assets/templates/user_guide.md` — 20-section schema (install → runtime config → core objects → main loop → advanced features → FAQ → minimal runnable examples).
 - `assets/templates/tutorial.md` — 10-chapter "from beginner to expert" schema with slots for real example file paths.
-- `assets/templates/README.md` — navigation hub that indexes the other four files.
+- `assets/templates/README.md` — navigation hub that indexes the other four files; mentions the optional `assess.md` first deliverable.
+- `assets/templates/assess.md` — **Phase -1 deliverable.** Materialised only when the scaffolder is invoked with `--assess`. The agent fills in suitability score, audience, reading path, and verdict before any of the other docs are written.
+- `assets/templates/_audience_block.md` — **Phase -1 fragment.** Prepended to the four non-hub generated docs (and to `assess.md` when `--assess` is also set) when the scaffolder is invoked with `--audience NAME`. `README.md` is the hub and is never prefixed.
 
 ### references/
 
@@ -214,6 +216,9 @@ Loaded into context on demand.
 - `references/doc_outlines.md` — canonical section-by-section outlines, with guidance on what each section must contain and how to source the evidence.
 - `references/evidence_checklist.md` — the minimum set of files and symbols to read during Phase 2, grouped by repo flavor (Python ML library, Python CLI, Node web app, Rust crate, Go service). Updated to be edge-ordered.
 - `references/writing_style.md` — writing-style conventions (tone, bilingual rules, code-citation format, TODO markers).
+- `references/suitability_signals.md` — **Phase -1.** Worth-mining rubric: six 0–2 signals rescaled to a 0–5 score, four hard vetoes, and a "skip — and why" branch.
+- `references/audience_profiling.md` — **Phase -1.** Six-bucket reader taxonomy (first-time-end-user, applied-engineer, contributor, auditor, learner, integrator) and the on-disk signals that suggest each.
+- `references/reading_path_suggestions.md` — **Phase -1.** Deterministic (audience × suitability-band) → entry-point matrix.
 
 ## Failure Modes to Avoid
 

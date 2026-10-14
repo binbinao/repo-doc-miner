@@ -59,7 +59,7 @@ Add a `Phase -1` step that runs **before** Phase 0 and produces a single documen
 3. **Where should each audience start?** — *Reading paths* (one suggested entry point + order per audience).
 4. **What concrete next step should the user take?** — *Reading suggestions* (1–3 actions).
 
-The Phase -1 output becomes front-matter on `topology.md` and is referenced from `README.md`.
+The Phase -1 output is a standalone `assess.md` file in the same `docs/guides/` directory; the `README.md` (hub) references it from its file table when present (only when `--assess` was used). `topology.md` does **not** carry a `## 0. Pre-Mining Assessment` section — the assessment is a peer file, not front-matter.
 
 ### 5.2 New files
 
@@ -224,7 +224,7 @@ Three reliability improvements that ship together:
 
 - All new `scaffold_docs.py` and `gen_topology.py` flags default to current behavior. Existing smoke tests stay green.
 - Existing template `{{PROJECT_NAME}}` substitution unchanged.
-- `topology.md` template gains a new `## 0. Pre-Mining Assessment` section when `--audience` is passed; without the flag the section is omitted (preserves current diff stability).
+- The Phase -1 output is a standalone `assess.md` (a new template), **not** a `## 0.` section prepended to `topology.md`. The hub README carries the conditional reference; `topology.md` is unchanged.
 
 ### 8.2 Documentation Discipline
 
