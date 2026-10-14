@@ -13,6 +13,12 @@ When --assess is passed, additionally materializes the Phase -1
 pre-mining assessment deliverable (see references/suitability_signals.md,
 references/audience_profiling.md, references/reading_path_suggestions.md).
 
+When --audience is passed, prepends the ``_audience_block.md`` fragment
+(with ``{{AUDIENCE}}`` and ``{{PROJECT_NAME}}`` substituted) to the four
+non-hub generated docs (topology, developer_guide, user_guide, tutorial)
+and, when --assess is also set, to ``assess.md``. ``README.md`` is the hub
+and is never prefixed.
+
 Existing template files in the output directory are left untouched unless
 --force is supplied, so a Phase-1 topology.md is never clobbered.
 
@@ -22,7 +28,8 @@ Usage
         --project-name "MyProject" \
         [--out docs/guides] \
         [--force] \
-        [--assess]
+        [--assess] \
+        [--audience NAME]
 
 Exit codes
 ----------
@@ -44,6 +51,11 @@ TEMPLATE_FILES = (
     "tutorial.md",
 )
 
+# The doc set is one hub (README.md, which already carries the audience
+# table) plus four spokes. The Phase -1 audience block is prepended to the
+# spokes only; the hub stays unprefixed so a re-run sees the same block.
+HUB_FILE = "README.md"
+
 
 def locate_templates_dir() -> Path:
     """Resolve the templates directory relative to this script's location."""
@@ -63,6 +75,7 @@ def materialize(
     project_name: str,
     force: bool,
     write_assess: bool = False,
+    audience_prefix: str | None = None,
 ) -> tuple[list[str], list[str]]:
     """Write the missing templates; return (written, skipped) file names.
 
@@ -70,6 +83,10 @@ def materialize(
     Phase -1 deliverable). ``assess.md`` is independent of the
     ``TEMPLATE_FILES`` list -- it only appears when the user opts in via
     ``--assess``, keeping the default behaviour unchanged.
+
+    When ``audience_prefix`` is given, it is prepended verbatim to the four
+    non-hub generated docs and to ``assess.md``; ``README.md`` (the hub) is
+    never prefixed.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -88,6 +105,8 @@ def materialize(
         # agent can fill them with evidence from Phase 2 of the
         # skill workflow.
         text = text.replace("{{PROJECT_NAME}}", project_name)
+        if audience_prefix and name != HUB_FILE:
+            text = audience_prefix + text
         dst.write_text(text, encoding="utf-8")
         written.append(name)
         print(f"  wrote {dst}")
@@ -106,6 +125,8 @@ def materialize(
             text = assess_src.read_text(encoding="utf-8").replace(
                 "{{PROJECT_NAME}}", project_name
             )
+            if audience_prefix:
+                text = audience_prefix + text
             assess_dst.write_text(text, encoding="utf-8")
             written.append("assess.md")
             print(f"  wrote {assess_dst}")
@@ -142,6 +163,15 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Additionally materialize the Phase -1 assess.md template. Default: off.",
     )
+    parser.add_argument(
+        "--audience",
+        default=None,
+        metavar="NAME",
+        help=("Prefix each generated doc with the audience block "
+              "(_audience_block.md), substituting {{AUDIENCE}}. NAME is "
+              "free-form (e.g. 'contributor', 'first-time-end-user'). "
+              "Default: no audience block."),
+    )
     args = parser.parse_args(argv)
 
     repo_root = args.repo_root.resolve()
@@ -156,11 +186,29 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
+    audience_block = templates_dir / "_audience_block.md"
+    if not audience_block.is_file():
+        print(f"error: audience block missing at {audience_block}; "
+              "the skill package appears to be corrupt.", file=sys.stderr)
+        return 1
+
+    audience_prefix: str | None = None
+    if args.audience:
+        try:
+            block = audience_block.read_text(encoding="utf-8")
+        except OSError as exc:
+            print(f"error: cannot read audience block: {exc}", file=sys.stderr)
+            return 1
+        audience_prefix = (block
+                           .replace("{{PROJECT_NAME}}", args.project_name)
+                           .replace("{{AUDIENCE}}", args.audience))
+
     print(f"Scaffolding docs for project '{args.project_name}'")
     print(f"  templates: {templates_dir}")
     print(f"  output:    {out_dir}")
     written, skipped = materialize(templates_dir, out_dir, args.project_name,
-                                   args.force, write_assess=args.assess)
+                                   args.force, write_assess=args.assess,
+                                   audience_prefix=audience_prefix)
     print(f"Done. {len(written)} written, {len(skipped)} skipped.")
     if args.assess:
         assess_status = ("written" if "assess.md" in written
