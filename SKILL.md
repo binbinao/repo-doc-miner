@@ -39,8 +39,12 @@ Trigger this skill when the user's request matches any of these patterns:
 - "Generate onboarding documentation for this codebase, save into docs/"
 - Any request where (a) the primary input is the current repository, and (b) the required output is a multi-audience doc set (with or without an architecture map) written in Markdown.
 
-Do NOT trigger for: single-file API docs, README refresh only, translation tasks, or when the user already has a target doc framework (Sphinx/MkDocs site generation).
+Do NOT trigger for any of the following:
 
+- Single-file API docs.
+- README refresh only.
+- Translation tasks.
+- The user already has a target doc framework (Sphinx/MkDocs site generation).
 - The repo is **archived** or explicitly "no longer maintained" (see `references/suitability_signals.md` hard veto).
 - The repo has **no `LICENSE` and no usage hint in its README** (same source).
 - The repo is a **vendor fork** with no top-level source directory (only `node_modules/`, `dist/`, etc.).
@@ -48,11 +52,11 @@ Do NOT trigger for: single-file API docs, README refresh only, translation tasks
 
 ## Workflow
 
-Follow these seven phases in order (Phase 0–6). Phases 1–2 are the new topology-first core; Phases 3–6 reuse the grounded-writing machinery from v1.
+Follow these eight phases in order (Phase -1, then Phase 0–6). Phase -1 is opt-in (see below); Phases 1–2 are the new topology-first core; Phases 3–6 reuse the grounded-writing machinery from v1.
 
 ### Phase -1 · Pre-Mining Assessment
 
-> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`). `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
+> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`) and, when `--assess` is also set, prefixes `assess.md` itself. `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
 
 This phase answers four questions **before** any code is read or topology generated:
 
