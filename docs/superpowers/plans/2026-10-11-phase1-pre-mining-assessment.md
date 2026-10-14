@@ -507,12 +507,11 @@ When --assess is passed, additionally materializes the Phase -1
 pre-mining assessment deliverable (see references/suitability_signals.md,
 references/audience_profiling.md, references/reading_path_suggestions.md).
 
-When --audience NAME is passed, prefixes the four non-hub generated docs
-(topology.md, developer_guide.md, user_guide.md, tutorial.md) with the
-audience block from assets/templates/_audience_block.md. README.md is
-the hub and is never prefixed. assess.md is also prefixed when --assess
-is passed together with --audience. The block's own text references the
-hub and the Phase -1 rubric files.
+When --audience is passed, prepends the ``_audience_block.md`` fragment
+(with ``{{AUDIENCE}}`` and ``{{PROJECT_NAME}}`` substituted) to the four
+non-hub generated docs (topology, developer_guide, user_guide, tutorial)
+and, when --assess is also set, to ``assess.md``. ``README.md`` is the hub
+and is never prefixed.
 
 Existing template files in the output directory are left untouched unless
 --force is supplied, so a Phase-1 topology.md is never clobbered.
@@ -529,10 +528,7 @@ Usage
 Exit codes
 ----------
     0  success (files written and/or skipped)
-    1  repo root does not exist, the templates directory is missing,
-       or assets/templates/_audience_block.md is missing when --audience
-       was passed
-    2  cannot create or write the output file
+    1  repo root does not exist, or the templates directory is missing
 """
 ```
 
@@ -568,7 +564,7 @@ def materialize(
 
     When ``write_assess`` is True, also materialize ``assess.md`` (the
     Phase -1 deliverable). ``assess.md`` is independent of the
-    ``TEMPLATE_FILES`` list — it only appears when the user opts in via
+    ``TEMPLATE_FILES`` list -- it only appears when the user opts in via
     ``--assess``, keeping the default behaviour unchanged.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -731,7 +727,7 @@ git commit -m "feat(scaffold): add --assess flag (Phase -1)"
 **Files:**
 - Modify: `scripts/scaffold_docs.py`
   - `main` — add `--audience` to argparse; pass it to `materialize`.
-  - `materialize` — accept `audience: str | None`; when set, prepend `_audience_block.md` to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed (so re-runs see the same prefix).
+  - `materialize` — accept `audience_prefix: str | None`; when set, prepend `_audience_block.md` to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed (so re-runs see the same prefix).
 - Test: scratch directory created and removed in Steps 6–7.
 
 **Interfaces:**
@@ -759,7 +755,7 @@ rg -q 'audience_block = templates_dir / "_audience_block.md"' scripts/scaffold_d
 
 Expected: `OK`.
 
-- [ ] **Step 2: Extend `materialize` signature with `audience: str | None`**
+- [ ] **Step 2: Extend `materialize` signature with `audience_prefix: str | None`**
 
 Update the `materialize` signature to:
 
@@ -816,10 +812,13 @@ def materialize(
 ) -> tuple[list[str], list[str]]:
 ```
 
-Final body (the relevant block). The HUB_FILE constant lives at module scope alongside TEMPLATE_FILES; README.md is the hub and is **never** prefixed, even when `audience_prefix` is set.
+Final body (the relevant block). The HUB_FILE constant lives at module scope alongside TEMPLATE_FILES (between `TEMPLATE_FILES = (...)` and `def locate_templates_dir`); README.md is the hub and is **never** prefixed, even when `audience_prefix` is set.
 
 ```python
-HUB_FILE = "README.md"  # the hub; never prefixed with the audience block
+# The doc set is one hub (README.md, which already carries the audience
+# table) plus four spokes. The Phase -1 audience block is prepended to the
+# spokes only; the hub stays unprefixed so a re-run sees the same block.
+HUB_FILE = "README.md"
 
 def materialize(
     templates_dir: Path,
@@ -977,7 +976,7 @@ Expected: stdout contains the line `Done. 5 written, 0 skipped.` (and the traili
 
 ```bash
 tmp=$(mktemp -d) && git -C "$tmp" init -q
-python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --assess --audience contributor 2>&1 | tail -2
+python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --assess --audience contributor 2>&1
 rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/assess.md" \
   && rg -q 'Demo' "$tmp/docs/guides/assess.md" \
   && echo "OK: assess.md has audience block + PROJECT_NAME substituted"
