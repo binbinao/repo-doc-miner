@@ -17,6 +17,18 @@ This ordering is what lets the skill scale to very large repositories: a topolog
 
 The final deliverables are: `topology.md` (the map), `developer_guide.md`, `user_guide.md`, `tutorial.md`, and a `README.md` navigation hub.
 
+## Prerequisites
+
+Tools the skill expects to be on `PATH` before Phase -1 (Pre-Mining Assessment) runs:
+
+| Tool | Why | Min version |
+|---|---|---|
+| `python3` | runs `scripts/gen_topology.py`, `scripts/scaffold_docs.py` | 3.8 (matches the script's `from __future__ import annotations` + PEP-604 typing) |
+| `git` | Phase -1 uses `git log -1 --format=%ct` for the vitality signal | any |
+| `rg` (ripgrep) | Phase 5 final sweep (`rg "TODO\(doc-miner\)"`) | any |
+
+If `rg` is missing the agent falls back to a host project file-listing tool, but the experience is best with it installed.
+
 ## When to Use
 
 Trigger this skill when the user's request matches any of these patterns:
@@ -28,6 +40,11 @@ Trigger this skill when the user's request matches any of these patterns:
 - Any request where (a) the primary input is the current repository, and (b) the required output is a multi-audience doc set (with or without an architecture map) written in Markdown.
 
 Do NOT trigger for: single-file API docs, README refresh only, translation tasks, or when the user already has a target doc framework (Sphinx/MkDocs site generation).
+
+- The repo is **archived** or explicitly "no longer maintained" (see `references/suitability_signals.md` hard veto).
+- The repo has **no `LICENSE` and no usage hint in its README** (same source).
+- The repo is a **vendor fork** with no top-level source directory (only `node_modules/`, `dist/`, etc.).
+- The repo has **fewer than 3 readable source files** after build/vendor filtering (same source).
 
 ## Workflow
 
