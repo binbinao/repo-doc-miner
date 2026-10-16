@@ -50,6 +50,42 @@ Do NOT trigger for any of the following:
 - The repo is a **vendor fork** with no top-level source directory (only `node_modules/`, `dist/`, etc.).
 - The repo has **fewer than 3 readable source files** after build/vendor filtering (same source).
 
+## Workflow Variants
+
+The seven phases (Phase 0–6) above describe the **Full mode** workflow. Two lighter modes are supported without code changes — the skill's existing commands and the agent's discretion cover them. Pick the variant that matches the user's request.
+
+### Full mode
+
+Default. Run all seven phases in order. Use when the user wants a complete, polished doc set derived from a non-trivial repository.
+
+### Lite mode (topology only)
+
+Use when the user wants a quick map of the repo without the prose. The deliverables are:
+
+- `topology.md` only (Phase 1 output).
+- Skip Phases 2–6 entirely.
+
+The user gets the structural map and can ask for more later. This is the right answer to "what's in this repo?" or "draw me the architecture".
+
+### Progressive mode (topology → decide → continue)
+
+Use when the user wants to evaluate the topology before committing to the full mining. The deliverables across two turns:
+
+- **Turn 1** (Lite mode): `topology.md`.
+- **Turn 2** (if the user says "continue" or similar): run Phases 2–6, producing the four prose documents and the `README.md` hub.
+
+This is the right answer to "is this repo worth a full write-up?" — the user sees the topology first and decides.
+
+### When to skip even Lite mode
+
+Even Lite mode is overkill when:
+
+- The repo is a single file or < 5 source files (the suitability rubric would mark it Low).
+- The repo is a vendor fork with no top-level source (no modules to enumerate).
+- The repo is archived (the rubric's hard veto).
+
+In all three cases, `Phase -1 · Pre-Mining Assessment` (when enabled) tells the user up front; the agent should report "skip — and why" and stop.
+
 ## Workflow
 
 Follow these eight phases in order (Phase -1, then Phase 0–6). Phase -1 is opt-in (see below); Phases 1–2 are the new topology-first core; Phases 3–6 reuse the grounded-writing machinery from v1.
