@@ -129,6 +129,16 @@ This phase answers *"what is in this repo and how is it wired?"* before any pros
 
 4. **Produce an entity inventory table** (count + location per entity type). This is the "map" the agent keeps open while deep-diving.
 
+#### How to refine edges
+
+`gen_topology.py` reads at most `MAX_FILE_READ = 200_000` bytes per file and never follows real imports. Its two edge kinds (`source → copy`, `uses`) are heuristic, not authoritative. After the script produces a draft `topology.md`:
+
+1. **Verify the 2–3 most structurally important edges by reading the actual manifests** (the spec's Phase 1 step 3). Edit the Mermaid block in `topology.md` if any are wrong.
+2. **Spend the rest of the refinement budget on `source → copy` edges.** A misclassified copy makes Phase 2 read the same content multiple times and miss the single source.
+3. **For the deep guide** (which edges to verify first, how to verify an edge, common false positives and negatives), see [`references/edge_refinement.md`](./references/edge_refinement.md).
+
+The script's intent is to ship a useful draft quickly, not to be the final answer. Treat the auto-detected `topology.md` as a starting point; refine it as you read the manifests.
+
 ### Phase 2 · Module Deep-Dive (evidence gathering, edge-ordered)
 
 Now read code *along the topology edges*, not at random.
