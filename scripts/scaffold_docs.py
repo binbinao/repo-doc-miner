@@ -30,7 +30,8 @@ Usage
         [--force] \
         [--assess] \
         [--audience NAME] \
-        [--flavor FLAVOR_NAME]
+        [--flavor FLAVOR_NAME] \
+        [--lang {bilingual,en,zh}]
 
 Exit codes
 ----------
@@ -86,6 +87,55 @@ def _strip_flavors(text: str, keep: str) -> str:
     return _FLAVOR_BLOCK_RE.sub(_repl, text)
 
 
+# H1 rewrites for `--lang`. Each entry is a 3-tuple of
+# (bilingual-template, english-only, chinese-only). The bilingual
+# template form is the literal H1 line in the source template (with
+# `{{PROJECT_NAME}}`); the other two are the rewrites. Substitution of
+# `{{PROJECT_NAME}}` happens before the rewrite, so the helper
+# substitutes the project name into each form.
+_LANG_HEADINGS: dict[str, tuple[str, str, str]] = {
+    "developer_guide.md": (
+        "# {{PROJECT_NAME}} 开发者文档 / Developer Guide",
+        "# {{PROJECT_NAME}} Developer Guide",
+        "# {{PROJECT_NAME}} 开发者文档",
+    ),
+    "user_guide.md": (
+        "# {{PROJECT_NAME}} 用户文档 / User Guide",
+        "# {{PROJECT_NAME}} User Guide",
+        "# {{PROJECT_NAME}} 用户文档",
+    ),
+    "tutorial.md": (
+        "# {{PROJECT_NAME}} 从入门到精通 / From Beginner to Expert Tutorial",
+        "# {{PROJECT_NAME}} From Beginner to Expert Tutorial",
+        "# {{PROJECT_NAME}} 从入门到精通",
+    ),
+    "README.md": (
+        "# {{PROJECT_NAME}} 指南中心 / Guide Hub",
+        "# {{PROJECT_NAME}} Guide Hub",
+        "# {{PROJECT_NAME}} 指南中心",
+    ),
+}
+
+
+def _rewrite_h1(text: str, lang: str, project_name: str) -> str:
+    """If ``lang`` is "en" or "zh", replace the bilingual H1 with the
+    english-only or chinese-only form. With "bilingual" (default), the
+    text is returned unchanged.
+
+    ``text`` has already had ``{{PROJECT_NAME}}`` substituted, so each
+    mapping form is substituted the same way before matching/replacing.
+    The H1 appears once per file, so at most one replacement is made.
+    """
+    if lang == "bilingual":
+        return text
+    idx = {"en": 1, "zh": 2}[lang]
+    for triple in _LANG_HEADINGS.values():
+        source = triple[0].replace("{{PROJECT_NAME}}", project_name)
+        target = triple[idx].replace("{{PROJECT_NAME}}", project_name)
+        text = text.replace(source, target, 1)
+    return text
+
+
 def locate_templates_dir() -> Path:
     """Resolve the templates directory relative to this script's location."""
     here = Path(__file__).resolve().parent
@@ -106,6 +156,7 @@ def materialize(
     write_assess: bool = False,
     audience_prefix: str | None = None,
     keep_flavor: str = "general",
+    lang: str = "bilingual",
 ) -> tuple[list[str], list[str]]:
     """Write the missing templates; return (written, skipped) file names.
 
@@ -123,6 +174,11 @@ def materialize(
     (no flavor-specific prose is kept); any other name keeps only blocks
     tagged with that name. ``{{PROJECT_NAME}}`` substitution and the
     audience prefix are applied first, so the strip sees final text.
+
+    ``lang`` selects the H1 heading language for the four templates that
+    carry bilingual H1s: ``bilingual`` (default) leaves the H1 unchanged,
+    ``en`` rewrites it to the English-only form, and ``zh`` rewrites it
+    to the Chinese-only form. H2 sections are not rewritten.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -144,6 +200,7 @@ def materialize(
         if audience_prefix and name != HUB_FILE:
             text = audience_prefix + text
         text = _strip_flavors(text, keep_flavor)
+        text = _rewrite_h1(text, lang, project_name)
         dst.write_text(text, encoding="utf-8")
         written.append(name)
         print(f"  wrote {dst}")
@@ -220,6 +277,16 @@ def main(argv: list[str] | None = None) -> int:
               "Reserved names: pinn (PINN/DeepXDE), cli (CLI tools), "
               "lib (plain libraries), monorepo (multi-language monorepos)."),
     )
+    parser.add_argument(
+        "--lang",
+        default="bilingual",
+        choices=["bilingual", "en", "zh"],
+        help=("Pick the H1 heading language for the 5 core templates. "
+              "Default: 'bilingual' (Chinese + English subtitle). "
+              "'en' drops the Chinese half; 'zh' drops the English subtitle. "
+              "H2 sections are always in English (the templates don't yet "
+              "carry parallel Chinese H2s); this flag is intentionally narrow."),
+    )
     args = parser.parse_args(argv)
 
     repo_root = args.repo_root.resolve()
@@ -257,7 +324,8 @@ def main(argv: list[str] | None = None) -> int:
     written, skipped = materialize(templates_dir, out_dir, args.project_name,
                                    args.force, write_assess=args.assess,
                                    audience_prefix=audience_prefix,
-                                   keep_flavor=args.flavor)
+                                   keep_flavor=args.flavor,
+                                   lang=args.lang)
     print(f"Done. {len(written)} written, {len(skipped)} skipped.")
     if args.assess:
         assess_status = ("written" if "assess.md" in written
