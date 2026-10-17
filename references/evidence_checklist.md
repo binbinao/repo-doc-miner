@@ -1,5 +1,15 @@
 # Evidence Checklist
 
+> **Tool vs. expectation (read first).** `scripts/gen_topology.py` is a static, stdlib-only miner. It reads up to `MAX_FILE_READ` bytes per file and never follows real imports, never executes code, and never reaches across the network. It detects:
+>
+> - top-level modules (directories at the repo root, build/vendor dirs excluded) and their first-level files
+> - plugin-style entities (`SKILL.md`, `agents/*.md`, `commands/*.md`, `.mcp.json`, `agent.yaml`)
+> - language packages (manifests under sub-directories: `pyproject.toml`, `package.json`, `Cargo.toml`, `go.mod`, `pom.xml`)
+> - scripts (`*.py` / `*.sh` at the root or under `scripts/`)
+> - `source → copy` and `uses` edges via keyword/path matching
+>
+> It does **not** detect: cross-module call graphs, dynamic dispatch, runtime plugin loading, generated artifacts, dependency lock files, or anything requiring code execution. Rows in this checklist that depend on those signals are aspirational; the agent must verify them by reading the source. Use the auto-detected `topology.md` as a starting point, not as the final answer.
+
 > **v2 edge-ordering note:** In the topology-first workflow, gather this
 > evidence *during Phase 2, walking modules along the dependency edges* drawn
 > in `topology.md` — not by random file reading. Read the single source of
