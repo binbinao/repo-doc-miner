@@ -4,18 +4,20 @@ A CodeBuddy / Claude-Code compatible **Skill** that mines an existing Git
 repository using a two-stage **topology-first → module-deep-dive** method
 and produces a coordinated Markdown doc set (a repo topology map, a
 developer guide, a user guide, a from-beginner-to-expert tutorial, and a
-navigation `README.md`) saved into the repository's `docs/guides/`
-folder. Use this skill when the user asks to "dig into / mine / analyze
-this project and produce documentation", "generate a repo topology /
-architecture map and docs", "write onboarding docs from the codebase", or
-any similar request where the deliverable is a coordinated doc set
-derived from reading the current repository.
+navigation `README.md`) — saved by default into the repository's
+`docs/guides/` folder, or into whatever directory the user passes via
+`scaffold_docs.py --out PATH`. Use this skill when the user asks to "dig
+into / mine / analyze this project and produce documentation", "generate a
+repo topology / architecture map and docs", "write onboarding docs from
+the codebase", or any similar request where the deliverable is a
+coordinated doc set derived from reading the current repository.
 
 **v3 adds a pre-mining assessment stage** that runs before the topology
-map is produced: an opt-in `Phase -1` that answers "is this repo worth
-mining, who is this for, and where to start reading?" The four questions
-are answered in an `assess.md` file. When the user does not opt in, v3
-behaves exactly as v2. See [`references/suitability_signals.md`](./references/suitability_signals.md)
+map is produced: an opt-in `Phase -1` that answers four questions — "is
+this repo worth mining, who is this for, where should I start reading,
+and what should I do next?" — in an `assess.md` file. When the user does
+not opt in, v3 behaves exactly as v2. See
+[`references/suitability_signals.md`](./references/suitability_signals.md)
 for the rubric.
 
 ## What changed in v2
