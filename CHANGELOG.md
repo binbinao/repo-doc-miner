@@ -22,6 +22,16 @@ All notable changes to `repo-doc-miner` are documented in this file. Versions fo
 - `gen_topology.py`: the `--max-entities` cap warning now prints only under `--verbose` (the `--max-edges` cap was always correct; the two now behave consistently). C5 polish.
 - `references/reading_path_suggestions.md`: the `\\`Phase -1\\` escaped-backtick pattern is now plain inline code (CommonMark backslash escapes do not apply inside code spans). RES-1 closure.
 
+#### Release notes (2026-10-11)
+
+The v1.4.0 release closes the spec's three original phases and adds two follow-up items:
+
+- **Spec items closed:** Phase -1 Pre-Mining Assessment (`--assess`, `--audience`); reliability (codified `smoke.py`, Workflow Variants, 12 failure modes); generalisation (`--dry-run`/`--summary`, de-PINN'd evidence checklist, 17 legacy `<angle-bracket>` slots removed from `topology.md`).
+- **Follow-ups wired in:** `--flavor {general,pinn,cli,lib,monorepo}` scaffolder flag; `--guides-dir PATH` smoke flag (closes Phase 2 R3); `--lang {bilingual,en,zh}` flag (closes spec §7.2).
+- **Production readiness:** `Makefile` (5 targets); `CHANGELOG.md` (this file); `scripts/check_resources.py` (SKILL.md Resources drift detector).
+- **Validation:** end-to-end runs against `tiangolo/fastapi` and `pallets/flask` both pass (`make validate` exits 0; `smoke.py --strict --guides-dir` exits 0 against both scaffolded outputs).
+- **Shipped under MIT, no third-party dependencies.** The skill is a `git clone` + `pip install` (or no install — pure stdlib) away from working for any CodeBuddy / Claude Code user.
+
 ## [1.3.0] — 2026-10-11
 
 ### Added

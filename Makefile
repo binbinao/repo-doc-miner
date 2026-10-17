@@ -10,7 +10,7 @@
 # `make clean` removes build caches and the throwaway guides directory
 # the smoke battery creates; it does not touch any user files.
 
-.PHONY: help test smoke smoke-strict clean
+.PHONY: help test smoke smoke-strict clean validate
 
 PYTHON ?= python3
 SCRIPT_DIR := scripts
@@ -25,6 +25,7 @@ help:
 	@echo "  test           run the full battery (scripts/smoke.py); exits non-zero on failure"
 	@echo "  smoke          alias for test"
 	@echo "  smoke-strict   scaffold a throwaway + audit with --strict --guides-dir"
+	@echo "  validate       run smoke + smoke-strict (full validation suite)"
 	@echo "  clean          remove __pycache__ and the throwaway guides/ subdirectory"
 	@echo "  help           this message (default)"
 	@echo ""
@@ -44,6 +45,9 @@ smoke-strict:
 	  status=$$? ; \
 	  rm -rf $$tmp ; \
 	  exit $$status
+
+validate: smoke smoke-strict
+	@echo "validate: full battery + throwaway --strict audit passed."
 
 clean:
 	@find . -name __pycache__ -type d -prune -exec rm -rf {} +
