@@ -1,5 +1,7 @@
 # {{PROJECT_NAME}} 用户文档 / User Guide
 
+> TODO(doc-miner): no remaining `{{...}}` placeholders before publishing. The `{{PROJECT_NAME}}` slot is filled by the scaffolder; every other `{{...}}` slot below is for the writing agent to fill from the Phase 2 evidence scratch note.
+
 > For end users and applied engineers who want to solve real problems with {{PROJECT_NAME}}.
 
 ---
@@ -137,5 +139,3 @@ Key options: `{{OPT_OPTIONS}}`.
 - Developer guide: [`developer_guide.md`](./developer_guide.md)
 - Tutorial: [`tutorial.md`](./tutorial.md)
 - Official docs: {{DOCS_URL_OR_TODO}}
-
-> TODO(doc-miner): remove any remaining `{{...}}` placeholders before publishing.

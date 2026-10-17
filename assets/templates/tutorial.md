@@ -1,5 +1,7 @@
 # {{PROJECT_NAME}} 从入门到精通 / From Beginner to Expert Tutorial
 
+> TODO(doc-miner): no remaining `{{...}}` placeholders before publishing. The `{{PROJECT_NAME}}` slot is filled by the scaffolder; every other `{{...}}` slot below is for the writing agent to fill from the Phase 2 evidence scratch note.
+
 > Ten chapters, progressively deeper. Every chapter is anchored in at least one real script under `examples/`.
 
 ## Table of contents
@@ -170,5 +172,3 @@ Pick any of the following extension points and implement a small patch:
 - Deep source reading: [`developer_guide.md`](./developer_guide.md).
 - API lookup: [`user_guide.md`](./user_guide.md).
 - Official docs: {{DOCS_URL_OR_TODO}}.
-
-> TODO(doc-miner): remove any remaining `{{...}}` placeholders before publishing.

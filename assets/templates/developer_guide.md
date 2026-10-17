@@ -1,5 +1,7 @@
 # {{PROJECT_NAME}} 开发者文档 / Developer Guide
 
+> TODO(doc-miner): no remaining `{{...}}` placeholders before publishing. The `{{PROJECT_NAME}}` slot is filled by the scaffolder; every other `{{...}}` slot below is for the writing agent to fill from the Phase 2 evidence scratch note.
+
 > Baseline: `{{GIT_BRANCH_OR_COMMIT}}`. For contributors who need to read source, extend the framework, or submit upstream PRs.
 
 ---
@@ -145,5 +147,3 @@ Base class lifecycle: {{CALLBACK_LIFECYCLE}}.
 
 - Main paper / canonical citation: {{CITATION_OR_TODO}}
 - Online docs: {{DOCS_URL_OR_TODO}}
-
-> TODO(doc-miner): remove any remaining `{{...}}` placeholders before publishing.

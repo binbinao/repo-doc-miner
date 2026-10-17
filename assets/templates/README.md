@@ -1,5 +1,7 @@
 # {{PROJECT_NAME}} 指南中心 / Guide Hub
 
+> TODO(doc-miner): no remaining `{{...}}` placeholders before publishing. The `{{PROJECT_NAME}}` slot is filled by the scaffolder; every other `{{...}}` slot below is for the writing agent to fill from the Phase 2 evidence scratch note.
+
 This folder contains **up to six** coordinated files derived from mining the {{PROJECT_NAME}} source tree using the topology-first workflow (five documents plus this hub). When the scaffolder was invoked with `--assess`, an additional `assess.md` is present — the Phase -1 pre-mining assessment (suitability score, audience, reading path, verdict) produced **before** any of the documents below. Start with `assess.md` if it is present; otherwise jump straight to the file that matches your role in the table below.
 
 | File | Audience | Contents |
