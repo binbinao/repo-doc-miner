@@ -29,7 +29,8 @@ Usage
         [--out docs/guides] \
         [--force] \
         [--assess] \
-        [--audience NAME]
+        [--audience NAME] \
+        [--flavor FLAVOR_NAME]
 
 Exit codes
 ----------
@@ -40,6 +41,7 @@ Exit codes
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -55,6 +57,33 @@ TEMPLATE_FILES = (
 # table) plus four spokes. The Phase -1 audience block is prepended to the
 # spokes only; the hub stays unprefixed so a re-run sees the same block.
 HUB_FILE = "README.md"
+
+# `<!-- flavor: NAME --> ... <!-- /flavor: NAME -->` blocks. The
+# backreference ensures a close marker must repeat its open marker's name,
+# so a mismatched pair is left in place rather than swallowing content.
+_FLAVOR_BLOCK_RE = re.compile(
+    r"<!--\s*flavor:\s*([a-z][a-z0-9_-]*)\s*-->(?P<body>.*?)"
+    r"<!--\s*/flavor:\s*\1\s*-->",
+    re.DOTALL,
+)
+
+
+def _strip_flavors(text: str, keep: str) -> str:
+    """Remove flavor-tagged blocks from ``text``.
+
+    Every ``<!-- flavor: NAME --> ... <!-- /flavor: NAME -->`` block is
+    removed except those whose NAME equals ``keep``. The default flavor
+    ``general`` is special: it keeps no flavor-specific prose, so every
+    block is stripped.
+    """
+    if keep == "general":
+        return _FLAVOR_BLOCK_RE.sub("", text)
+
+    def _repl(match: re.Match) -> str:
+        name = match.group(1)
+        return match.group("body") if name == keep else ""
+
+    return _FLAVOR_BLOCK_RE.sub(_repl, text)
 
 
 def locate_templates_dir() -> Path:
@@ -76,6 +105,7 @@ def materialize(
     force: bool,
     write_assess: bool = False,
     audience_prefix: str | None = None,
+    keep_flavor: str = "general",
 ) -> tuple[list[str], list[str]]:
     """Write the missing templates; return (written, skipped) file names.
 
@@ -87,6 +117,12 @@ def materialize(
     When ``audience_prefix`` is given, it is prepended verbatim to the four
     non-hub generated docs and to ``assess.md``; ``README.md`` (the hub) is
     never prefixed.
+
+    ``keep_flavor`` selects which ``<!-- flavor: NAME -->`` blocks survive
+    in the written files. The default ``general`` strips every flavor block
+    (no flavor-specific prose is kept); any other name keeps only blocks
+    tagged with that name. ``{{PROJECT_NAME}}`` substitution and the
+    audience prefix are applied first, so the strip sees final text.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -107,6 +143,7 @@ def materialize(
         text = text.replace("{{PROJECT_NAME}}", project_name)
         if audience_prefix and name != HUB_FILE:
             text = audience_prefix + text
+        text = _strip_flavors(text, keep_flavor)
         dst.write_text(text, encoding="utf-8")
         written.append(name)
         print(f"  wrote {dst}")
@@ -127,6 +164,7 @@ def materialize(
             )
             if audience_prefix:
                 text = audience_prefix + text
+            text = _strip_flavors(text, keep_flavor)
             assess_dst.write_text(text, encoding="utf-8")
             written.append("assess.md")
             print(f"  wrote {assess_dst}")
@@ -172,6 +210,16 @@ def main(argv: list[str] | None = None) -> int:
               "free-form (e.g. 'contributor', 'first-time-end-user'). "
               "Default: no audience block."),
     )
+    parser.add_argument(
+        "--flavor",
+        default="general",
+        choices=["general", "pinn", "cli", "lib", "monorepo"],
+        help=("Which flavor-specific template blocks to keep. "
+              "Default: 'general' (strips every flavor-tagged block). "
+              "See assets/templates/_flavor_strip.md for the convention. "
+              "Reserved names: pinn (PINN/DeepXDE), cli (CLI tools), "
+              "lib (plain libraries), monorepo (multi-language monorepos)."),
+    )
     args = parser.parse_args(argv)
 
     repo_root = args.repo_root.resolve()
@@ -208,7 +256,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  output:    {out_dir}")
     written, skipped = materialize(templates_dir, out_dir, args.project_name,
                                    args.force, write_assess=args.assess,
-                                   audience_prefix=audience_prefix)
+                                   audience_prefix=audience_prefix,
+                                   keep_flavor=args.flavor)
     print(f"Done. {len(written)} written, {len(skipped)} skipped.")
     if args.assess:
         assess_status = ("written" if "assess.md" in written
