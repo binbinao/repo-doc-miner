@@ -32,7 +32,7 @@ Minimum files / symbols that MUST be read during Phase 2 before writing any pros
 | `Makefile` | Common developer commands. |
 | Existing `docs/` tree listing | Avoid style / vocabulary drift. |
 
-## Python ML / scientific-computing library (e.g. DeepXDE)
+## Python ML / scientific-computing library
 
 | Target | Read strategy |
 | --- | --- |
@@ -41,16 +41,13 @@ Minimum files / symbols that MUST be read during Phase 2 before writing any pros
 | `<pkg>/config.py` | All public setters. |
 | `<pkg>/backend/` or `<pkg>/engine/` | `__init__.py`, `backend.py` (interface spec), loader logic. |
 | `<pkg>/data/__init__.py` | Full `__all__` list; sample one concrete data class. |
-| `<pkg>/geometry/__init__.py` (if applicable) | Full `__all__` list; read base `Geometry` class signature. |
-| `<pkg>/icbc/` or `<pkg>/constraints/` | Base class + all BC/IC subclasses' signatures. |
-| `<pkg>/nn/__init__.py` | Backend-dispatch mechanism; one concrete network per supported backend. |
+| `<pkg>/constraints/` or `<pkg>/bc/` | Base class + all subclasses' signatures (the constraint/Boundary-condition layer; renamed in newer libs). |
 | `<pkg>/gradients/` or AD module | `jacobian` / `hessian` / `clear` contract. |
 | `<pkg>/optimizers/__init__.py` + `config.py` | Supported optimizer names, per-backend LR schedules. |
-| `<pkg>/callbacks.py` | Every callback class and its lifecycle method. |
 | `<pkg>/losses.py` / `metrics.py` | Full dict of supported identifiers. |
+| `<pkg>/callbacks.py` or `<pkg>/hooks.py` | Every callback class and its lifecycle method (may live under `hooks/` or `trainers/` in newer libs). |
 | `examples/<forward>/*.py` | Pick 2–3 short forward examples. |
-| `examples/<inverse>/*.py` | Pick 1 inverse example (usually Lorenz-style parameter identification). |
-| `examples/<operator>/*.py` | Pick 1 operator-learning example. |
+| `examples/<inverse>/*.py` or `examples/<parameter-id>/*.py` | Pick 1 parameter-identification example. |
 
 ## Python CLI / web-service
 
@@ -61,6 +58,11 @@ Minimum files / symbols that MUST be read during Phase 2 before writing any pros
 | `<pkg>/config.py` / `settings.py` | Env vars, default ports. |
 | `<pkg>/handlers/` or `routers/` | Enumerate routes; sample 1 handler. |
 | `openapi.json` / `swagger/` | If present, extract endpoint list. |
+| `<pkg>/auth/` or `<pkg>/middleware/` | Auth flow, middleware stack; if absent, record why. |
+| `<pkg>/db/` or `<pkg>/models.py` | Data access patterns, ORM usage, schema migrations. |
+| `<pkg>/api/` or `<pkg>/schemas/` | Request/response schemas (pydantic / dataclass / interface definitions). |
+| `<pkg>/tasks/` or `<pkg>/jobs/` | Background worker definitions, queue integrations. |
+| `<pkg>/logging.py` or `<pkg>/observability/` | Structured logging, metrics, tracing setup. |
 
 ## Node / TypeScript library
 
@@ -71,15 +73,25 @@ Minimum files / symbols that MUST be read during Phase 2 before writing any pros
 | `tsconfig.json` | Language target, module system. |
 | `src/<core>/` | Main class(es) + public types. |
 | `examples/` or `demo/` | One runnable example. |
+| `package.json` `peerDependencies` | Compatibility matrix (often missed by docs). |
+| `tsconfig.json` `compilerOptions` | Target / module / strictness settings. |
+| `src/<core>/index.ts` | Public type re-exports (where types live). |
+| `src/<core>/types.ts` or `*.d.ts` | Public type definitions. |
+| `src/<core>/errors.ts` | Error classes and their contracts. |
 
 ## Rust crate
 
 | Target | Read strategy |
 | --- | --- |
-| `Cargo.toml` | crate name, edition, features. |
-| `src/lib.rs` / `src/main.rs` | `pub use` re-exports. |
-| `src/<module>/mod.rs` | Public types per module. |
+| `Cargo.toml` | crate name, edition, dependency set. |
+| `src/main.rs` | Binary entry point, argument parsing, and top-level wiring. |
+| `src/<module>/` (non-`mod.rs`) | Internal data structures, trait impls, and helpers the public API delegates to. |
 | `examples/` | One small example. |
+| `Cargo.toml` `[features]` | Optional-feature matrix and their dependencies. |
+| `src/lib.rs` | `pub use` re-exports + the main public API. |
+| `src/<module>/mod.rs` | Per-module public types and traits. |
+| `src/error.rs` or `src/errors/` | Public `Error` / `Result` types and their `From` impls. |
+| `tests/` or `#[cfg(test)]` modules | Per-module test coverage; sample one test per module. |
 
 ## Go module
 
@@ -87,9 +99,14 @@ Minimum files / symbols that MUST be read during Phase 2 before writing any pros
 | --- | --- |
 | `go.mod` | Module path, Go version. |
 | Top-level `*.go` files with `package <name>` | Exported types (Capitalized). |
-| `cmd/` subfolders | Binaries. |
-| `internal/` vs. `pkg/` split | Public vs. private surface. |
+| `cmd/` subfolders | Discover every binary and the flag/config conventions they share. |
+| `pkg/` (if present) | Public surface intended for external import. |
 | `examples/` or `_examples/` | One runnable. |
+| Top-level `doc.go` | Package-level doc comment (godoc). |
+| `go.sum` | Pinned transitive deps (use for license/compatibility check, not behavior). |
+| `cmd/<binary>/main.go` | Binary entry points and their flag parsing. |
+| `internal/<pkg>/` | Private surface (still important if it does heavy lifting). |
+| `<pkg>.go` files in each subdir | Exported types and their method signatures. |
 
 ## Output of Phase 2
 
