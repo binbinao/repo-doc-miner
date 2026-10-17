@@ -36,22 +36,31 @@ human then refines the detected edges by reading the most important manifests.
 
 ```
 .
-├── SKILL.md                       # Skill manifest + two-stage workflow (entry point)
+├── SKILL.md                       # Skill manifest + Phase -1..6 workflow (entry point)
 ├── assets/
 │   └── templates/                 # Markdown skeletons used as the literal starting point
-│       ├── topology.md            # NEW v2: architecture-map scaffold
-│       ├── developer_guide.md
-│       ├── user_guide.md
-│       ├── tutorial.md
-│       └── README.md
+│       ├── topology.md            # architecture-map scaffold (v2; slots removed v3)
+│       ├── developer_guide.md     # 15-section schema
+│       ├── user_guide.md          # 20-section schema
+│       ├── tutorial.md            # 10-chapter schema
+│       ├── README.md              # navigation hub
+│       ├── assess.md              # NEW v3 (Phase -1): pre-mining assessment deliverable
+│       ├── _audience_block.md     # NEW v3 (Phase -1): audience-prefix fragment
+│       └── _flavor_strip.md       # NEW v3 (Phase 3): no-op marker for future --flavor
 ├── references/                    # Loaded on demand during writing
-│   ├── topology_method.md         # NEW v2: the two-stage methodology + how to extend
+│   ├── topology_method.md         # the two-stage methodology + how to extend
 │   ├── doc_outlines.md            # canonical section-by-section outlines
-│   ├── evidence_checklist.md      # minimum files/symbols to read, now edge-ordered
-│   └── writing_style.md           # prose conventions
+│   ├── evidence_checklist.md      # minimum files/symbols to read; opens with tool-vs-expectation callout (v3)
+│   ├── writing_style.md           # prose conventions
+│   ├── suitability_signals.md     # NEW v3 (Phase -1): worth-mining rubric
+│   ├── audience_profiling.md      # NEW v3 (Phase -1): six-bucket reader taxonomy
+│   ├── reading_path_suggestions.md# NEW v3 (Phase -1): (audience × suitability-band) matrix
+│   └── edge_refinement.md         # NEW v3 (Phase 2): how to verify and refine auto-detected edges
 ├── scripts/
-│   ├── gen_topology.py            # NEW v2: scan a repo → Mermaid topology + inventory
-│   └── scaffold_docs.py           # create docs/guides/ and materialize templates
+│   ├── gen_topology.py            # scan a repo → Mermaid topology + inventory; --dry-run, --summary
+│   ├── scaffold_docs.py           # create docs/guides/ and materialize templates; --assess, --audience
+│   ├── smoke.py                   # NEW v3 (Phase 2): codified safe smoke + Phase-5 checks
+│   └── _env.sh                    # NEW v3 (Phase 3): sourceable REPO_DOC_MINER_HOME exporter
 └── LICENSE
 ```
 

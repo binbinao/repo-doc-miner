@@ -1,10 +1,10 @@
 ---
 name: repo-doc-miner
 description: Mine an existing Git repository using a two-stage "topology-first → module-deep-dive" method and generate a coordinated **five-file** Markdown doc set — a repo topology map (Mermaid), developer guide, user guide, from-beginner-to-expert tutorial, and a navigation `README.md` — saved into the repository's `docs/guides/` folder. Use this skill when the user asks to "dig into / mine / analyze this project and produce documentation", "generate a repo topology / architecture map and docs", "write onboarding docs from the codebase", or any similar request where the deliverable is a coordinated doc set derived from reading the current repository.
-version: 2.0.0
+version: 3.0.0
 ---
 
-# Repo Doc Miner (v2 — Topology-First)
+# Repo Doc Miner (v3 — Topology-First + Pre-Mining Assessment)
 
 ## Overview
 
@@ -239,8 +239,10 @@ Produce a short final summary containing:
 
 ### scripts/
 
-- `scripts/gen_topology.py` — **new in v2.** Scans a repo, detects entity types and dependency edges, and writes a Mermaid-backed `topology.md` (structural graph + dependency-edge graph + entity inventory + per-module deep-dive scaffold). Heuristic but safe on arbitrary repos. Run it at the start of Phase 1.
+- `scripts/gen_topology.py` — **new in v2.** Scans a repo, detects entity types and dependency edges, and writes a Mermaid-backed `topology.md` (structural graph + dependency-edge graph + entity inventory + per-module deep-dive scaffold). Heuristic but safe on arbitrary repos. Run it at the start of Phase 1. Accepts two opt-in flags: `--dry-run` (print detected counts + would-be output path without writing) and `--summary` (print a 1-screen human summary of the detected inventory; the topology file is still written unless `--dry-run` is also set).
 - `scripts/scaffold_docs.py` — creates `<repo>/docs/guides/` and materializes the five document templates from `assets/templates/` with their `{{PROJECT_NAME}}` placeholder substituted (existing files are skipped unless `--force` is passed). Run at the start of Phase 4. Accepts two opt-in flags: `--assess` (materialise `assess.md`) and `--audience NAME` (prefix the four non-hub docs with `_audience_block.md`); both are off by default, so a v2 behaviour is preserved when neither is passed.
+- `scripts/smoke.py` — **Phase 2.** Codified AGENTS.md "safe smoke test" plus Phase-5 checks. Run after any change to `gen_topology.py` or `scaffold_docs.py` to confirm the scaffolder + topology pipeline still produces a non-empty output and the published templates are well-formed. Exits 0 on success; supports `--check-only` (skip scaffolder writes) and `--strict` (publish-gate on pending placeholders and `<angle-bracket>` slots).
+- `scripts/_env.sh` — **Phase 3.** Sourceable shell snippet that exports `REPO_DOC_MINER_HOME` (the directory containing this skill). Use when invoking the skill's scripts from outside the skill root: `source /path/to/repo-doc-miner/scripts/_env.sh && python "$REPO_DOC_MINER_HOME/scripts/scaffold_docs.py" <repo-root>`. No runtime dependency — purely a path helper.
 
 ### assets/templates/
 
