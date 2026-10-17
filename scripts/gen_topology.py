@@ -22,8 +22,21 @@ Usage
 -----
     python scripts/gen_topology.py <repo-root> \
         [--out docs/guides/topology.md] \
-        [--project-name "MyProject"] \
-        [--max-edges 200]
+        [--project-name "<DisplayName>"] \
+        [--max-edges N] [--max-entities N] \
+        [--dry-run | --summary] \
+        [--diff] [--diff-markdown <PATH>]
+
+    --dry-run    print detected counts + would-be output path; no write
+    --summary    print a 1-screen human summary of the detected
+                 inventory (entity kinds + edge count + largest
+                 entity + top-3 outbound edges) to stdout; the
+                 topology.md file is still written unless --dry-run
+                 is also set
+    --diff       diff mode (existing): compare the new entity set
+                 against the existing --out file
+    --diff-markdown <PATH> (existing): with --diff, also write
+                 the diff body to <PATH>
 
 A relative ``--out`` is resolved against <repo-root>; the default is
 ``<repo-root>/docs/guides/topology.md``.
@@ -31,8 +44,8 @@ A relative ``--out`` is resolved against <repo-root>; the default is
 Exit codes
 ----------
     0  success
-    1  repo root missing or unreadable, or an invalid --max-edges
-    2  cannot create or write the output file
+    1  repo root missing or unreadable, or invalid --max-edges / --max-entities
+    2  cannot create or write the output file (only with --diff-markdown or default write)
 """
 
 from __future__ import annotations
@@ -638,6 +651,28 @@ def _emit_diff(out_path: Path, entities: list[Entity], project_name: str,
     return 0
 
 
+def _print_summary(entities: list, edges: list) -> None:
+    """1-screen human summary used by `gen_topology.py --summary`."""
+    by_kind: dict[str, list] = {}
+    for e in entities:
+        by_kind.setdefault(e.kind, []).append(e)
+    print("SUMMARY:")
+    for kind, ents in sorted(by_kind.items(), key=lambda kv: -len(kv[1])):
+        print(f"  {kind}: {len(ents)}")
+    print(f"  edges: {len(edges)}")
+    if entities:
+        largest = max(entities, key=lambda e: e.size)
+        print(f"  largest: {largest.name} ({largest.kind}, {largest.size} bytes) at {largest.rel_path}")
+    # Top-3 outbound edges
+    outbound: dict[str, int] = {}
+    for ed in edges:
+        outbound[ed.src] = outbound.get(ed.src, 0) + 1
+    if outbound:
+        top = sorted(outbound.items(), key=lambda kv: -kv[1])[:3]
+        for src, count in top:
+            print(f"  top outbound: {src} -> {count} edge(s)")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Generate a repo topology map (Mermaid) + entity inventory."
@@ -649,6 +684,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="Cap on rendered dependency edges (default 200). 0 = unlimited.")
     parser.add_argument("--max-entities", type=int, default=500,
                         help="Cap on detected entities (default 500). 0 = unlimited.")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Print detected entity/edge counts + would-be output path; do not write --out.")
+    parser.add_argument("--summary", action="store_true",
+                        help="Print a 1-screen human summary of the detected inventory to stdout; --out is still written unless --dry-run is also set.")
     parser.add_argument("--verbose", action="store_true",
                         help="Print progress to stderr while scanning.")
     parser.add_argument("--diff", action="store_true",
@@ -700,6 +739,16 @@ def main(argv: list[str] | None = None) -> int:
                           sorted(counts.items(), key=lambda kv: -kv[1]))
         print(f"  skipped {len(skip_log)} file(s) during edge detection: {parts}",
               file=sys.stderr)
+
+    if args.dry_run:
+        print(f"DRY-RUN: would write to {out_path}")
+        print(f"  detected: {len(entities)} entities, {len(edges)} edges")
+        if args.summary:
+            _print_summary(entities, edges)
+        return 0
+
+    if args.summary:
+        _print_summary(entities, edges)
 
     if args.diff:
         return _emit_diff(out_path, entities, project_name,
