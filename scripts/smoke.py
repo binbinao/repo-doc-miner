@@ -5,14 +5,30 @@ This script exists because the AGENTS.md "Verification gates" section
 contains a bash block (the "safe smoke test") that is meant to be run
 manually after every change to `scripts/`. It is easy to skip; harder to
 notice when it has drifted. This file makes it a single command and
-adds Phase-5 checks (Mermaid fences, placeholder residue, link
-integrity) that the manual block does not cover.
+adds Phase-5 checks (Mermaid fences, placeholder residue) that the manual
+block does not cover. Relative-link checking is part of the manual Phase-5
+sweep (`SKILL.md`), not of this script.
 
 Usage
 -----
     python scripts/smoke.py                # run the full battery
-    python scripts/smoke.py --check-only    # no writes; just verify
+    python scripts/smoke.py --check-only    # skip the Phase-4 scaffolder step
+    python scripts/smoke.py --strict        # full Phase-5 publish gate
     python scripts/smoke.py --keep-tmp      # leave the throwaway dir behind
+
+Policy
+------
+The placeholder checks have two tiers. The scaffolder contract always
+applies: the placeholders `scaffold_docs.py` substitutes itself
+(`{{PROJECT_NAME}}`, `{{AUDIENCE}}`) must not survive. Every other
+`{{...}}` placeholder and every `<...>` slot is filled in by hand during
+Phase 4 / Phase 3, so it is reported as `[INFO]` and only fails under
+`--strict`, and only for a file that no longer carries a
+`TODO(doc-miner)` marker (i.e. claims to be publish-ready).
+
+`--check-only` runs only the `gen_topology.py` step — that step still
+writes `topology.md` into the throwaway directory; only the Phase-4
+scaffolder is skipped.
 
 Exit codes
 ----------
@@ -35,10 +51,12 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 
-# Placeholders `scaffold_docs.py` substitutes itself. Anything else in
-# `{{...}}` is filled in by the agent during Phase 4 and is expected to
-# survive scaffolding untouched.
-SCAFFOLDER_PLACEHOLDERS = ("PROJECT_NAME", "AUDIENCE")
+# The placeholders `scaffold_docs.py` substitutes itself, in the exact
+# braced shape the residue scan finds. Anything else in `{{...}}` is filled
+# in by the agent during Phase 4 and is expected to survive scaffolding
+# untouched. Membership is exact so that e.g. `{{PRIMARY_AUDIENCE}}` (from
+# `assets/templates/assess.md`) is not mistaken for `{{AUDIENCE}}`.
+SCAFFOLDER_PLACEHOLDERS = frozenset({"{{PROJECT_NAME}}", "{{AUDIENCE}}"})
 
 
 def _print(check: str, ok: bool, detail: str = "") -> None:
@@ -49,7 +67,41 @@ def _print(check: str, ok: bool, detail: str = "") -> None:
     print(line)
 
 
-def _safe_smoke(*, write: bool, keep_tmp: bool = False) -> int:
+def _fence_problems(text: str) -> list[str]:
+    """Describe every unbalanced fenced code block in ``text``.
+
+    Tracks the open fence (backtick-run length + info string) instead of
+    toggling a boolean, so a fence that opens while another block is still
+    open — an unclosed ```mermaid followed by ```bash, say — is reported
+    instead of silently closing the first block.
+    """
+    problems: list[str] = []
+    open_run = 0
+    open_info = ""
+    open_line = 0
+    for lineno, line in enumerate(text.splitlines(), 1):
+        stripped = line.lstrip()
+        if not stripped.startswith("```"):
+            continue
+        run = len(stripped) - len(stripped.lstrip("`"))
+        info = stripped[run:].strip()
+        if open_run and info:
+            problems.append(
+                f"line {lineno}: ```{info} opened while the block from line "
+                f"{open_line} is still open"
+            )
+            open_run, open_info, open_line = run, info, lineno
+        elif open_run and run >= open_run:
+            open_run, open_info, open_line = 0, "", 0
+        elif not open_run:
+            open_run, open_info, open_line = run, info, lineno
+        # A shorter bare fence inside an open block is block content.
+    if open_run:
+        problems.append(f"line {open_line}: unclosed ```{open_info} block")
+    return problems
+
+
+def _safe_smoke(*, write: bool, keep_tmp: bool = False, strict: bool = False) -> int:
     """Replicate the AGENTS.md safe smoke test.
 
     Returns 0 on success. When `write` is False, the scaffolder is
@@ -84,7 +136,7 @@ def _safe_smoke(*, write: bool, keep_tmp: bool = False) -> int:
             else:
                 _print("scaffold_docs.py on throwaway", True, scaff.stdout.strip().splitlines()[-1] if scaff.stdout else "")
                 # Phase-5 checks on the materialized output
-                failures += _phase5_checks(tmp_path / "docs" / "guides")
+                failures += _phase5_checks(tmp_path / "docs" / "guides", strict=strict)
         else:
             _print("scaffold_docs.py skipped (--check-only)", True)
     finally:
@@ -96,30 +148,16 @@ def _safe_smoke(*, write: bool, keep_tmp: bool = False) -> int:
     return failures
 
 
-def _phase5_checks(guides_dir: Path) -> int:
+def _phase5_checks(guides_dir: Path, *, strict: bool = False) -> int:
     """Mermaid fences closed, no broken `{{...}}` placeholders in shipped
     files, `TODO(doc-miner)` count printed (informational)."""
     failures = 0
 
-    # 1. Mermaid fences are balanced.
+    # 1. Fenced code blocks are balanced and each block is closed.
     for md in sorted(guides_dir.glob("*.md")):
-        text = md.read_text(encoding="utf-8")
-        # Each ```mermaid ... ``` block must be closed.
-        # We use a fence-aware state machine: count ``` not inside code blocks.
-        in_code = False
-        in_mermaid = False
-        for line in text.splitlines():
-            stripped = line.strip()
-            if stripped.startswith("```"):
-                if not in_code:
-                    in_code = True
-                    in_mermaid = stripped == "```mermaid"
-                else:
-                    if in_mermaid:
-                        in_mermaid = False
-                    in_code = False
-        if in_mermaid:
-            _print(f"{md.name}: mermaid fence balanced", False, "unclosed ```mermaid block")
+        problems = _fence_problems(md.read_text(encoding="utf-8"))
+        if problems:
+            _print(f"{md.name}: mermaid fence balanced", False, "; ".join(problems))
             failures += 1
         else:
             _print(f"{md.name}: mermaid fence balanced", True)
@@ -128,20 +166,21 @@ def _phase5_checks(guides_dir: Path) -> int:
     #   - A surviving `{{PROJECT_NAME}}` / `{{AUDIENCE}}` always fails: the
     #     scaffolder is contracted to substitute those.
     #   - Every other `{{...}}` placeholder and every `<...>` slot is filled
-    #     in by hand (Phase 4 / Phase 3), so they only fail once the file no
-    #     longer carries a `TODO(doc-miner)` marker, i.e. claims to be
-    #     publish-ready. A draft scaffold is reported as INFO instead.
+    #     in by hand (Phase 4 / Phase 3), so it is reported as `[INFO]` by
+    #     default and only fails under `--strict`, and only for a file that
+    #     no longer carries a `TODO(doc-miner)` marker, i.e. claims to be
+    #     publish-ready.
     for md in sorted(guides_dir.glob("*.md")):
         text = md.read_text(encoding="utf-8")
-        draft = "TODO(doc-miner)" in text
+        publish_ready = "TODO(doc-miner)" not in text
 
         found = sorted(set(re.findall(r"\{\{[A-Z_]+\}\}", text)))
-        broken = [p for p in found if any(k in p for k in SCAFFOLDER_PLACEHOLDERS)]
-        pending = [p for p in found if p not in broken]
+        broken = [p for p in found if p in SCAFFOLDER_PLACEHOLDERS]
+        pending = [p for p in found if p not in SCAFFOLDER_PLACEHOLDERS]
         if broken:
             _print(f"{md.name}: no leftover placeholders", False, f"scaffolder placeholder survived: {broken}")
             failures += 1
-        elif pending and not draft:
+        elif strict and pending and publish_ready:
             _print(f"{md.name}: no leftover placeholders", False, f"found {pending}")
             failures += 1
         else:
@@ -150,7 +189,7 @@ def _phase5_checks(guides_dir: Path) -> int:
             print(f"[INFO] {md.name}: {len(pending)} Phase-4 placeholder(s) pending fill-in")
 
         slots = sorted(set(re.findall(r"<[a-z -]+>", text)))
-        if slots and not draft:
+        if strict and slots and publish_ready:
             _print(f"{md.name}: no <angle-bracket> slots", False, f"found {slots}")
             failures += 1
         else:
@@ -171,7 +210,11 @@ def _phase5_checks(guides_dir: Path) -> int:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--check-only", action="store_true",
-                        help="Run only the topology generation step; skip scaffolder writes.")
+                        help="Run only the topology generation step (it still writes into the "
+                             "throwaway dir); skip the Phase-4 scaffolder step.")
+    parser.add_argument("--strict", action="store_true",
+                        help="Full Phase-5 publish gate: also fail on Phase-4 placeholders and "
+                             "<angle-bracket> slots left in a file with no TODO(doc-miner) marker.")
     parser.add_argument("--keep-tmp", action="store_true",
                         help="Leave the throwaway directory behind for inspection (its path is printed).")
     args = parser.parse_args(argv)
@@ -183,11 +226,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {HERE / 'scaffold_docs.py'} not found", file=sys.stderr)
         return 2
 
-    print(f"repo-doc-miner smoke test (check_only={args.check_only})")
+    print(f"repo-doc-miner smoke test (check_only={args.check_only}, strict={args.strict})")
     print(f"  repo: {REPO}")
     print()
 
-    failures = _safe_smoke(write=not args.check_only, keep_tmp=args.keep_tmp)
+    failures = _safe_smoke(write=not args.check_only, keep_tmp=args.keep_tmp, strict=args.strict)
     print()
     if failures:
         print(f"FAILED: {failures} check(s) did not pass.", file=sys.stderr)
