@@ -24,7 +24,7 @@ Usage
         [--out docs/guides/topology.md] \
         [--project-name "<DisplayName>"] \
         [--max-edges N] [--max-entities N] \
-        [--dry-run | --summary] \
+        [--dry-run] [--summary] \
         [--diff] [--diff-markdown <PATH>]
 
     --dry-run    print detected counts + would-be output path; no write
@@ -32,7 +32,7 @@ Usage
                  inventory (entity kinds + edge count + largest
                  entity + top-3 outbound edges) to stdout; the
                  topology.md file is still written unless --dry-run
-                 is also set
+                 is also set (--dry-run --summary writes nothing)
     --diff       diff mode (existing): compare the new entity set
                  against the existing --out file
     --diff-markdown <PATH> (existing): with --diff, also write
