@@ -101,13 +101,25 @@ def _fence_problems(text: str) -> list[str]:
     return problems
 
 
-def _safe_smoke(*, write: bool, keep_tmp: bool = False, strict: bool = False) -> int:
+def _safe_smoke(*, write: bool, keep_tmp: bool = False, strict: bool = False,
+                guides_dir: Path | None = None) -> int:
     """Replicate the AGENTS.md safe smoke test.
 
     Returns 0 on success. When `write` is False, the scaffolder is
     invoked with `--force` semantics skipped (i.e. not invoked at all),
     which makes this safe to call from `--check-only` mode.
+
+    When `guides_dir` is set, audit that directory in place instead of
+    generating a throwaway scaffold. The `strict` flag enables the
+    publish-ready check in `_phase5_checks` (only meaningful with a real
+    `docs/guides/` set).
     """
+    if guides_dir is not None:
+        if not guides_dir.is_dir():
+            _print(f"guides-dir {guides_dir} is not a directory", False)
+            return 1
+        return _phase5_checks(guides_dir, strict=strict)
+
     failures = 0
     tmp_dir = tempfile.mkdtemp(prefix="rsm-smoke-")
     tmp_path = Path(tmp_dir)
@@ -217,6 +229,11 @@ def main(argv: list[str] | None = None) -> int:
                              "<angle-bracket> slots left in a file with no TODO(doc-miner) marker.")
     parser.add_argument("--keep-tmp", action="store_true",
                         help="Leave the throwaway directory behind for inspection (its path is printed).")
+    parser.add_argument("--guides-dir", type=Path, default=None,
+                        help="Audit an existing docs/guides/ directory in place "
+                             "(no throwaway generation). Combined with --strict, "
+                             "fail on Phase-4 placeholders and <...> slots in "
+                             "publish-ready files (no TODO(doc-miner) marker).")
     args = parser.parse_args(argv)
 
     if not (HERE / "gen_topology.py").is_file():
@@ -230,7 +247,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  repo: {REPO}")
     print()
 
-    failures = _safe_smoke(write=not args.check_only, keep_tmp=args.keep_tmp, strict=args.strict)
+    failures = _safe_smoke(write=not args.check_only, keep_tmp=args.keep_tmp,
+                           strict=args.strict, guides_dir=args.guides_dir)
     print()
     if failures:
         print(f"FAILED: {failures} check(s) did not pass.", file=sys.stderr)
