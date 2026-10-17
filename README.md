@@ -1,17 +1,22 @@
-# repo-doc-miner (v2 — Topology-First)
+# repo-doc-miner (v3 — Topology-First + Pre-Mining Assessment)
 
 A CodeBuddy / Claude-Code compatible **Skill** that mines an existing Git
-repository using a two-stage **topology-first → module-deep-dive** method and
-produces a coordinated Markdown doc set:
+repository using a two-stage **topology-first → module-deep-dive** method
+and produces a coordinated Markdown doc set (a repo topology map, a
+developer guide, a user guide, a from-beginner-to-expert tutorial, and a
+navigation `README.md`) saved into the repository's `docs/guides/`
+folder. Use this skill when the user asks to "dig into / mine / analyze
+this project and produce documentation", "generate a repo topology /
+architecture map and docs", "write onboarding docs from the codebase", or
+any similar request where the deliverable is a coordinated doc set
+derived from reading the current repository.
 
-- `topology.md` — **the primary deliverable**: a structural map (Mermaid diagrams) + entity inventory of the repository.
-- `developer_guide.md` — architecture tours, module breakdowns, extension SOPs.
-- `user_guide.md` — installation through advanced user-facing features.
-- `tutorial.md` — a beginner-to-expert, chapter-by-chapter learning path.
-- `README.md` — a navigation hub that links the other four files.
-
-Every claim is grounded in the actual code, configuration, and examples of the
-target repository — not generic knowledge.
+**v3 adds a pre-mining assessment stage** that runs before the topology
+map is produced: an opt-in `Phase -1` that answers "is this repo worth
+mining, who is this for, and where to start reading?" The four questions
+are answered in an `assess.md` file. When the user does not opt in, v3
+behaves exactly as v2. See [`references/suitability_signals.md`](./references/suitability_signals.md)
+for the rubric.
 
 ## What changed in v2
 
