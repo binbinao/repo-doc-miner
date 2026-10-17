@@ -51,12 +51,16 @@ Source: `{{TOP_INIT_PATH}}`.
 
 > Skip this section if the project has no multi-backend indirection.
 
+<!-- flavor: backend -->
+The material below is backend-specific. With `--flavor general`, this whole block is stripped. With `--flavor pinn` (or any other non-`general` flavor that the scaffolder's `choices=` list does not match), the block is also stripped (the scaffolder only knows `general`/`pinn`/`cli`/`lib`/`monorepo`; see `_flavor_strip.md` for the convention).
+
 - Unified interface file: `{{BACKEND_INTERFACE_PATH}}`.
 - Selection priority:
   1. {{BACKEND_PRIORITY_1}}
   2. {{BACKEND_PRIORITY_2}}
   3. {{BACKEND_PRIORITY_3}}
 - Enabled-API registry mechanism: {{ENABLED_API_MECHANISM}}.
+<!-- /flavor: backend -->
 
 ## 7. Data & domain layer
 
