@@ -33,13 +33,13 @@ For each edge, do this:
 
 - **Comments / docs mentioning the keyword.** A README that says "use the `system.file:` directive" will be picked up as a `source → copy`. Check whether the line is in a code fence or a prose paragraph.
 - **Test fixtures.** A test under `tests/fixtures/sample-system-file.md` may legitimately be a copy; decide whether to keep it.
-- **Vendored content.** Anything under `vendor/`, `third_party/`, `node_modules/`, or `dist/` is ignored by the script (see `IGNORE_DIRS`); if you see a vendored entity in the inventory, the script's `IGNORED_DIRS` may be too permissive for your repo.
+- **Vendored content.** Anything under a directory in the script's `IGNORE_DIRS` set (e.g. `node_modules/`, `dist/`, `build/`, `target/`) or inside a `*.egg-info/` directory is ignored; if you see a vendored entity in the inventory, `IGNORE_DIRS` may be too permissive for your repo.
 
 ## Common false negatives
 
 - **Imports the script doesn't know about.** Python `from . import sibling` (relative imports with no leading module) is hard to resolve from a single file. Phase 2 humans must add these manually.
 - **Generated artifacts.** If `dist/foo.js` is built from `src/foo.ts`, the script sees `dist/foo.js` as a top-level entity but won't draw an edge from `src/foo.ts`. Add the edge by hand.
-- **Edges to files the script skipped.** Files under `.gitignore`-style filters (e.g. large generated files) won't be in the inventory; their upstream source may still be. Add the upstream-to-skipped edge manually.
+- **Edges to files the script skipped.** Files filtered out by the script's hardcoded `IGNORE_DIRS` list (plus any `*.egg-info/` directory) never enter the inventory; their upstream source may still be. The script does not read `.gitignore` and never shells out to git, so a file ignored only by `.gitignore` and sitting outside those directories *is* inventoried. Add the upstream-to-skipped edge manually.
 
 ## What this guide deliberately does not do
 
