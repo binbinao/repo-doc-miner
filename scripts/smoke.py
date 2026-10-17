@@ -51,6 +51,15 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent
 
+# Sanity: the Phase 3 + Phase 4 auxiliary files must exist.
+for _aux_path in (
+    REPO / "scripts" / "_env.sh",
+    REPO / "assets" / "templates" / "_flavor_strip.md",
+):
+    if not _aux_path.is_file():
+        print(f"error: required file missing: {_aux_path}", file=sys.stderr)
+        raise SystemExit(2)
+
 # The placeholders `scaffold_docs.py` substitutes itself, in the exact
 # braced shape the residue scan finds. Anything else in `{{...}}` is filled
 # in by the agent during Phase 4 and is expected to survive scaffolding

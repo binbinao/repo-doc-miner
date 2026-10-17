@@ -35,8 +35,8 @@ When the band is Low (no veto) the agent writes one short paragraph naming the w
 
 After picking the entry file, the agent writes 1–3 imperative actions. Templates:
 
-- For High: `Open the entry file. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run \`Phase -1\` with a different audience.`
+- For High: `Open the entry file. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run 'Phase -1' with a different audience.`
 - For Mid: `Skim the entry file's first 100 lines. If the first concrete API or class matches what you need, proceed; otherwise stop.`
-- For Skip: `the remediation sentence; re-run \`Phase -1\` afterwards.`
+- For Skip: `the remediation sentence; re-run 'Phase -1' afterwards.`
 
 These are starting points, not fixed wording — adjust per audience when needed (e.g., add `git clone` for an integrator audience).
