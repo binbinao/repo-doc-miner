@@ -243,6 +243,7 @@ Produce a short final summary containing:
 - `scripts/scaffold_docs.py` — creates `<repo>/docs/guides/` and materializes the five document templates from `assets/templates/` with their `{{PROJECT_NAME}}` placeholder substituted (existing files are skipped unless `--force` is passed). Run at the start of Phase 4. Accepts two opt-in flags: `--assess` (materialise `assess.md`) and `--audience NAME` (prefix the four non-hub docs with `_audience_block.md`); both are off by default, so a v2 behaviour is preserved when neither is passed.
 - `scripts/smoke.py` — **Phase 2.** Codified AGENTS.md "safe smoke test" plus Phase-5 checks. Run after any change to `gen_topology.py` or `scaffold_docs.py` to confirm the scaffolder + topology pipeline still produces a non-empty output and the published templates are well-formed. Exits 0 on success; supports `--check-only` (skip scaffolder writes) and `--strict` (publish-gate on pending placeholders and `<angle-bracket>` slots).
 - `scripts/_env.sh` — **Phase 3.** Sourceable shell snippet that exports `REPO_DOC_MINER_HOME` (the directory containing this skill). Use when invoking the skill's scripts from outside the skill root: `source /path/to/repo-doc-miner/scripts/_env.sh && python "$REPO_DOC_MINER_HOME/scripts/scaffold_docs.py" <repo-root>`. No runtime dependency — purely a path helper.
+- `scripts/check_resources.py` — **Phase 5.** Drift detector: cross-checks SKILL.md's `## Resources` section against the actual files under `assets/templates/`, `references/`, and `scripts/`. Always exits 0; the report is informational. Use to spot drift after adding a new template or reference.
 
 ### assets/templates/
 
@@ -255,6 +256,7 @@ Markdown skeletons carrying a fixed section schema. Use them as the literal star
 - `assets/templates/README.md` — navigation hub that indexes the other four files; mentions the optional `assess.md` first deliverable.
 - `assets/templates/assess.md` — **Phase -1 deliverable.** Materialised only when the scaffolder is invoked with `--assess`. The agent fills in suitability score, audience, reading path, and verdict before any of the other docs are written.
 - `assets/templates/_audience_block.md` — **Phase -1 fragment.** Prepended to the four non-hub generated docs (and to `assess.md` when `--assess` is also set) when the scaffolder is invoked with `--audience NAME`. `README.md` is the hub and is never prefixed.
+- `assets/templates/_flavor_strip.md` — **Phase 3 marker.** No-op documentation file that describes how a future `--flavor FLAVOR_NAME` scaffolder flag should structure template sections (Phase 4 wired the consumer side; this is the contract doc). The current scaffolder does not read this file.
 
 ### references/
 
@@ -267,6 +269,7 @@ Loaded into context on demand.
 - `references/suitability_signals.md` — **Phase -1.** Worth-mining rubric: six 0–2 signals rescaled to a 0–5 score, four hard vetoes, and a "skip — and why" branch.
 - `references/audience_profiling.md` — **Phase -1.** Six-bucket reader taxonomy (first-time-end-user, applied-engineer, contributor, auditor, learner, integrator) and the on-disk signals that suggest each.
 - `references/reading_path_suggestions.md` — **Phase -1.** Deterministic (audience × suitability-band) → entry-point matrix.
+- `references/edge_refinement.md` — **Phase 2.** Practitioner's guide to verifying and refining the auto-detected dependency edges emitted by `gen_topology.py`. After Phase 1 produces a draft `topology.md`, use this to confirm the 2–3 most structurally important edges and to catch the common false positives (docs mentioning keywords, test fixtures, vendored content) and false negatives (relative imports, generated artifacts).
 
 ## Failure Modes to Avoid
 
