@@ -52,11 +52,11 @@ Do NOT trigger for any of the following:
 
 ## Workflow Variants
 
-The eight phases (Phase -1, then Phase 0–6) below describe the **Full mode** workflow. Two lighter modes are supported without code changes — the skill's existing commands and the agent's discretion cover them. Pick the variant that matches the user's request.
+The eight phases (Phase -1, then Phase 0–6) below describe the **Full mode** workflow. Phase -1 is **opt-in** (the agent only runs it when the user explicitly enables `--assess`; see below). Two lighter modes are supported without code changes — the skill's existing commands and the agent's discretion cover them. Pick the variant that matches the user's request.
 
 ### Full mode
 
-Default. Run all eight phases in order. Use when the user wants a complete, polished doc set derived from a non-trivial repository.
+Default. Run the seven phases (Phase 0–6) in order; add Phase -1 only when the user opts in. Use when the user wants a complete, polished doc set derived from a non-trivial repository.
 
 ### Lite mode (topology only)
 

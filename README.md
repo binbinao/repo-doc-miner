@@ -97,7 +97,7 @@ python scripts/scaffold_docs.py <repo-root> \
 - **Cross-link** the five files so any one of them is a valid entry point.
 - **Mark unresolved gaps** with `TODO(doc-miner)` instead of fabricating behavior.
 
-See `SKILL.md` for the full seven-phase workflow (Phase 0–6) and
+See `SKILL.md` for the full eight-phase workflow (Phase -1, then Phase 0–6; Phase -1 is opt-in) and
 `references/topology_method.md` for the methodology and how to extend the
 topology detector to new repo families.
 
