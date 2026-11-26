@@ -95,8 +95,8 @@ For the concrete per-flavor "what to read" guidance, see `references/evidence_ch
 Before writing prose, draft a one-screen outline for each of the four documents (the fifth file, `README.md`, is the hub that links them). Reuse the canonical outlines in `references/doc_outlines.md` and specialize their section titles with concrete names harvested in Phase 2 (package names, class names, config flags, and — new in v2 — the topology node/edge names). Verify that:
 
 - The **topology** clearly shows the top-level structure, the key dependency edges, and the entity inventory.
-- The **developer guide** covers architecture, every top-level module, runtime config, extension/contribution SOPs, and debugging tips.
-- The **user guide** walks from installation to the most advanced user-facing feature, using API names that actually exist in the repo.
+- The **developer guide** covers architecture, every top-level module, runtime config, extension/contribution SOPs, and debugging tips, plus the entry-point map (§4.1) and the evaluator sections (test map, release policy, dependency risk, quality signals — §16–§19).
+- The **user guide** walks from installation to the most advanced user-facing feature, using API names that actually exist in the repo, and includes the novice sections (§1 pitch + non-goals, §18.1 error triage, §19 glossary, §20 getting help, §21 pitfalls).
 - The **tutorial** has 8–12 progressive chapters, each anchored in at least one real file from the repo.
 
 ### Phase 4 · Writing
@@ -118,6 +118,7 @@ Then edit each file in place. Follow these rules:
 - **Match the repo's host language**: if the existing `docs/` content is primarily Chinese, write in Chinese; primarily English, write in English; bilingual repositories default to the language of the user's current query.
 - **Keep each file self-contained**: duplicate a minimum amount of glossary/context so any one file can be opened first.
 - **Mark unresolved gaps explicitly** with `> TODO(doc-miner): ...` lines when evidence is insufficient; never fabricate behavior.
+- **Fill the persona sections**: the novice-facing (pitch + non-goals, error triage, glossary, getting help, pitfalls) and evaluator-facing (entry-point map, test map, release policy, dependency risk, quality signals) sections are mandatory content, not optional flavor. If the repo genuinely lacks a fact, keep the heading and mark it `> TODO(doc-miner): n/a — <reason>`.
 
 ### Phase 5 · Validation
 
@@ -151,8 +152,8 @@ Produce a short final summary containing:
 Markdown skeletons carrying a fixed section schema. Use them as the literal starting point for each file; do **not** rewrite them from scratch. Replace every `{{PLACEHOLDER}}` with repo-specific content harvested in Phase 2.
 
 - `assets/templates/topology.md` — **new in v2.** The architecture-map scaffold (Mermaid blocks + inventory table + per-module sections).
-- `assets/templates/developer_guide.md` — 15-section schema (overview → architecture → module tours → extension SOPs → debugging).
-- `assets/templates/user_guide.md` — 20-section schema (install → runtime config → core objects → main loop → advanced features → FAQ → minimal runnable examples).
+- `assets/templates/developer_guide.md` — 19-section schema (overview → architecture → entry-point map → module tours → test map → release policy → dependency risk → quality signals → extension SOPs → debugging).
+- `assets/templates/user_guide.md` — 23-section schema (install → runtime config → core objects → main loop → advanced features → FAQ + error triage → glossary → getting help → pitfalls → minimal runnable examples).
 - `assets/templates/tutorial.md` — 10-chapter "from beginner to expert" schema with slots for real example file paths.
 - `assets/templates/README.md` — navigation hub that indexes the other four files.
 
