@@ -17,9 +17,15 @@ Minimum files / symbols that MUST be read during Phase 2 before writing any pros
 | `CITATION.cff` (if present) | Canonical citation. |
 | Top-level build/metadata file (`pyproject.toml` / `setup.py` / `package.json` / `Cargo.toml` / `go.mod` / `pom.xml`) | Package name, supported language versions, dependency list, entry points. |
 | `requirements*.txt` / `environment.yml` (if present) | Runtime extras not covered by build file. |
-| `.github/workflows/` (top-level only) | CI install commands, supported platforms. |
+| `.github/workflows/` (top-level only) | CI install commands, supported platforms, and the test/coverage/lint gates that run per PR. |
 | `Dockerfile` / `docker/` | GPU / reproducible install hints. |
 | `Makefile` | Common developer commands. |
+| `tests/` / `test/` top-level layout | Test map: unit/integration split, run-all + run-one commands. |
+| `CHANGELOG.md` / `CHANGES.rst` / GitHub Releases | Release cadence, breaking-change history, versioning scheme. |
+| `git log` / `git tag` vitality | Last commit date, tag cadence — trust signals for developer guide §2/§17. |
+| `rg -c "TODO\|FIXME"` per module | Quality/debt hotspots for developer guide §19. |
+| `SUPPORT.md` / `.github/ISSUE_TEMPLATE/` / `SECURITY.md` | Getting-help channels + security policy for user guide §20. |
+| Entry-point files (`__main__.py` / `cli.py` / `app.py` / `cmd/`) | Entry-point map surfaces for developer guide §4.1. |
 | Existing `docs/` tree listing | Avoid style / vocabulary drift. |
 
 ## Python ML / scientific-computing library (e.g. DeepXDE)
@@ -89,5 +95,9 @@ Maintain a scratch note (internal, not a deliverable) with:
 - `__all__` per top-level sub-package.
 - Main class signatures (constructor + 3–5 key methods).
 - List of chosen example files with a 1-line summary each.
+- Test-map facts: layout, run-all / run-one commands, coverage command, CI gates.
+- Release facts: latest tag, last commit date, changelog path, versioning scheme.
+- Quality signals: TODO/FIXME counts per module, `git shortlog -sn` top contributors.
+- Support channels: issue tracker, discussions/community, security contact.
 
 This note feeds directly into the template `{{PLACEHOLDER}}` substitutions in Phase 4.

@@ -20,6 +20,9 @@ Headline capabilities:
 - Language runtime: `{{LANG_VERSION_CONSTRAINT}}`
 - Core dependencies: {{DEPS_LIST}}
 - Version source: `{{VERSION_SOURCE_FILE}}`
+- Repo homepage: `{{REPO_URL_OR_TODO}}`
+- Latest release / tag: `{{LATEST_RELEASE_OR_TODO}}`
+- Last commit: {{LAST_COMMIT_DATE_OR_TODO}} (vitality signal)
 
 ## 3. Repository layout
 
@@ -34,6 +37,17 @@ Headline capabilities:
 ```
 
 Narrative: {{ARCHITECTURE_NARRATIVE}}
+
+### 4.1 Entry-point map
+
+Where execution starts, per surface:
+
+| Surface | Entry point | What it does |
+| --- | --- | --- |
+| CLI | `{{ENTRY_CLI_OR_TODO}}` | {{ENTRY_CLI_DESC}} |
+| API / service | `{{ENTRY_API_OR_TODO}}` | {{ENTRY_API_DESC}} |
+| Library import | `{{ENTRY_LIB}}` | {{ENTRY_LIB_DESC}} |
+| Plugin / hook registration | `{{ENTRY_HOOK_OR_TODO}}` | {{ENTRY_HOOK_DESC}} |
 
 ## 5. Top-level namespace
 
@@ -138,6 +152,36 @@ Base class lifecycle: {{CALLBACK_LIFECYCLE}}.
 | --- | --- |
 | `{{ERR_1}}` | {{ERR_1_FIX}} |
 | `{{ERR_2}}` | {{ERR_2_FIX}} |
+
+## 16. Test map
+
+- Layout: `{{TEST_DIR_LAYOUT}}` — unit vs. integration vs. e2e split.
+- Run everything: `{{TEST_RUN_ALL_CMD}}`.
+- Run a single test: `{{TEST_RUN_ONE_CMD}}`.
+- Coverage: `{{TEST_COVERAGE_CMD_OR_TODO}}`.
+- CI gates: `{{CI_WORKFLOW_PATH}}` runs {{CI_GATES}}.
+
+## 17. Release & compatibility policy
+
+- Versioning scheme: {{VERSION_SCHEME}} (source: `{{VERSION_SOURCE_FILE}}`).
+- Changelog: `{{CHANGELOG_PATH_OR_TODO}}`.
+- Breaking-change policy: {{BREAKING_POLICY_OR_TODO}}.
+- Supported-version matrix: {{SUPPORT_MATRIX_OR_TODO}}.
+
+## 18. Dependency risk surface
+
+| Dependency | Version constraint | License | Risk notes |
+| --- | --- | --- | --- |
+| `{{DEP_RISK_1}}` | {{DEP_RISK_1_VER}} | {{DEP_RISK_1_LICENSE}} | {{DEP_RISK_1_NOTES}} |
+| `{{DEP_RISK_2}}` | {{DEP_RISK_2_VER}} | {{DEP_RISK_2_LICENSE}} | {{DEP_RISK_2_NOTES}} |
+
+> Risk notes cover: unmaintained/deprecated upstream, license incompatibility, pinned ceilings, known CVEs. Write `n/a — clean` when nothing applies.
+
+## 19. Quality & debt signals
+
+- `TODO` / `FIXME` hotspots (top modules by count): {{TODO_HOTSPOTS}}.
+- Known dead code or deprecation debt: {{DEBT_NOTES_OR_TODO}}.
+- Contributor concentration (bus factor): {{BUS_FACTOR_OR_TODO}} — from `git shortlog -sn`.
 
 ---
 

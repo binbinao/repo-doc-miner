@@ -4,12 +4,13 @@ Authoritative section skeletons for the four documents (`topology.md` is generat
 
 ---
 
-## developer_guide.md (15 sections)
+## developer_guide.md (19 sections)
 
 1. **Project positioning & scope** — one paragraph on problem domain; bullet list of the headline capabilities.
-2. **Metadata snapshot** — license, supported languages/runtimes, dependency list, version source.
+2. **Metadata snapshot** — license, supported languages/runtimes, dependency list, version source, repo homepage, latest release, last-commit vitality.
 3. **Repository layout** — annotated tree of top-level folders and key files.
 4. **Runtime architecture overview** — ASCII diagram linking the main data/model/runtime classes.
+    - 4.1. **Entry-point map** (subsection) — where execution starts per surface: CLI / API / library import / plugin hook.
 5. **Top-level namespace** — table of exported aliases vs. real module paths (from `__init__` / `index`).
 6. **Backend / platform abstraction (if any)** — unified interface, adapter selection logic, enabled-API registry.
 7. **Data & domain layer** — every data container, geometry primitive, constraint/BC/IC type; evidence: sub-package `__init__.py`.
@@ -21,19 +22,24 @@ Authoritative section skeletons for the four documents (`topology.md` is generat
 13. **Loss & metric registries** — mapping from string identifier to implementation; rules for contributing new ones.
 14. **Parallel / distributed training** — what is supported, how to enable, known limitations.
 15. **Contribution SOPs & debugging** — dev-env setup, adding a new backend/BC/network, PR flow, common error → root-cause table.
+16. **Test map** — test layout, run-all + run-one commands, coverage, CI gates.
+17. **Release & compatibility policy** — versioning scheme, changelog, breaking-change policy, supported-version matrix.
+18. **Dependency risk surface** — per-dependency version constraint, license, risk notes (deprecated / pinned / known CVEs).
+19. **Quality & debt signals** — TODO/FIXME hotspots, dead code, bus factor (`git shortlog -sn`).
 
 Grounding rules:
 - Every section MUST include at least one `path/to/file.py::Symbol` reference the first time it is introduced.
 - Sub-package tours (§5–§13) MUST enumerate the real `__all__` list, not a summarized approximation.
+- The test map MUST contain a run-one command that actually exists in the repo (verify before citing).
 
 ---
 
-## user_guide.md (20 sections)
+## user_guide.md (23 sections)
 
-1. What the library can solve / do (user-facing capability list).
+1. What the library can solve / do (user-facing capability list, one-sentence plain-language pitch, non-goals).
 2. Installation — pip / conda / docker / source; per-backend or per-extras matrix.
 3. Choosing a backend / runtime (if applicable) — decision table.
-4. Global configuration — precision, seed, autodiff mode, JIT, verbosity.
+4. Global configuration — precision, seed, autodiff mode, JIT, verbosity. Every user-facing knob, exhaustive.
 5. Core-object map — one ASCII picture linking the user-facing classes.
 6. Geometry / domain definition — primitives, composition (CSG), sampling strategies.
 7. Boundary / initial conditions — all supported types with signatures.
@@ -47,13 +53,17 @@ Grounding rules:
 15. Persistence — save/restore, portable format caveats.
 16. Visualization & post-processing — built-in plotting helpers, residual inspection.
 17. Parallel training (if applicable).
-18. Troubleshooting — curated FAQ table.
-19. Minimal runnable templates — ≥2 end-to-end snippets (forward problem + inverse problem or operator-learning problem).
-20. Further reading — pointers to official docs, papers, tutorial.
+18. Troubleshooting — curated FAQ table + §18.1 error triage (error → plain-language meaning → fix).
+19. Glossary — domain jargon in plain language, each term mapped to the defining symbol.
+20. Getting help — issue tracker, discussions/community, how to ask a good question.
+21. Common pitfalls & misconceptions — "don't panic when…" pairs.
+22. Minimal runnable templates — ≥2 end-to-end snippets (forward problem + inverse problem or operator-learning problem).
+23. Further reading — pointers to official docs, papers, tutorial, support channels.
 
 Grounding rules:
 - Every API shown MUST exist in the current repo; verify against the source file before citing.
 - Prefer signatures over prose when introducing a class.
+- Glossary terms MUST cite the defining symbol (`path/to/file.py::Symbol`) in the "Defined at" column.
 
 ---
 

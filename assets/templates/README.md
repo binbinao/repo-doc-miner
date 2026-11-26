@@ -17,6 +17,17 @@ This folder contains five coordinated files derived from mining the {{PROJECT_NA
 - Based on direct reading of `{{SOURCE_PACKAGE_PATH}}/`, `examples/`, and existing `docs/` material.
 - Every claim is grounded in a concrete source path; unresolved facts are marked with `> TODO(doc-miner): ...`.
 
+## Persona routing / 你是谁,从哪开始
+
+| You are… | Start with |
+| --- | --- |
+| Completely new to this project | `user_guide.md` §1 (pitch + non-goals) → §2 (install) → §19 (glossary) → §22 (minimal example) |
+| Deciding whether to adopt / depend on this repo | `developer_guide.md` §2 (metadata) + §16–§19 (tests, releases, dependencies, quality), then `topology.md` |
+| Extending or contributing | `developer_guide.md` end to end, cross-reference `topology.md` |
+| Just want the big picture | `topology.md` |
+
+> Not sure which one you are? Read `user_guide.md` §1 — its one-sentence pitch will tell you quickly.
+
 ## Reading order suggestions
 
 1. **New users** — start with `user_guide.md` §1–§11, then do chapters 1–4 of `tutorial.md`.
