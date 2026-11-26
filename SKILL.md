@@ -29,6 +29,16 @@ Trigger this skill when the user's request matches any of these patterns:
 
 Do NOT trigger for: single-file API docs, README refresh only, translation tasks, or when the user already has a target doc framework (Sphinx/MkDocs site generation).
 
+## Workflow Variants
+
+Full mode (all five files) is the default. Match the mode to the target repo and the user's request, and state the choice in the Phase 6 handover summary:
+
+- **Full mode** (default) — all five files. For repos with enough substance to ground the 42 content sections plus 10 tutorial chapters (roughly: several real modules, a public API surface, tests or examples).
+- **Lite mode (topology only)** — deliver `topology.md` alone. For small or single-purpose repos where full mode would emit mostly `TODO(doc-miner): n/a` sections, or when the user asks for "just the structure". Do not run `scaffold_docs.py`; the handover must list the four skipped files.
+- **Progressive mode** — hand over `topology.md` first, then pause and let the user decide whether to continue with the remaining four files. For evaluation requests, tight budgets, or uncertain scope.
+
+Lite and Progressive change no scripts and no templates — only how much of the workflow runs. Phase 0 states the mode; Phase 6 reports it.
+
 ## Workflow
 
 Follow these seven phases in order (Phase 0–6). Phases 1–2 are the new topology-first core; Phases 3–6 reuse the grounded-writing machinery from v1.
@@ -38,6 +48,7 @@ Follow these seven phases in order (Phase 0–6). Phases 1–2 are the new topol
 1. Determine the repository root (usually the workspace root).
 2. Choose the output directory. Default: `docs/guides/` under the repo root. If `docs/` does not exist, create `docs/guides/` anyway (it is a self-contained sub-folder and will not clash with Sphinx/MkDocs). Prefer an existing docs directory if it is clearly the convention of the repo.
 3. Confirm the five target files: `topology.md` (map), `developer_guide.md`, `user_guide.md`, `tutorial.md`, and a `README.md` navigation hub.
+4. Choose the workflow mode — **Full** (default, all five files), **Lite** (topology only), or **Progressive** (topology → user decides → continue) — per `## Workflow Variants`, and state it in the Phase 6 handover.
 
 ### Phase 1 · Topology Generation (core deliverable)
 
