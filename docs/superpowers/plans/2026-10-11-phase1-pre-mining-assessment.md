@@ -1286,7 +1286,7 @@ If any commit is missing or in the wrong order, return to the corresponding task
 | §5.6 script changes: scaffold_docs.py adds `--assess` (default off), `--audience` (default off); gen_topology.py unchanged | Tasks 6 + 7; Tasks 6 Steps 5, 7 + 7 Steps 5–7 verify defaults |
 | §5.7 SKILL.md: Phase -1 + When NOT to Use + Prerequisites | Tasks 8 + 9 |
 | §5.8 test plan | Tasks 6 Step 5, 6 Step 6, 6 Step 7, 7 Steps 5–7, Task 11 |
-| Open Decisions: `<angle-bracket>` slot fate — **deferred to Phase 3** (spec §8) ✓ | not in this plan |
+| Open Decisions: `<angle-bracket>` slot fate — **deferred to Phase 3** (spec §9.3) ✓ | not in this plan |
 | Open Decisions: Default audience when none — **defined as "no audience block"** in §5.1 spec ✓ | Task 7 Step 5 verifies absence when no flag |
 | Open Decisions: Archived-repo veto mechanism — **on-disk signals only**, no API calls | Task 1 hard vetoes |
 | Open Decisions: Phase -1 as real phase — **yes, additive prefix** | Task 8 |

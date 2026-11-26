@@ -22,7 +22,7 @@ But the user (and any future user) still has three unanswered questions before t
 
 These gaps fall under one heading: **pre-mining strategy**. The skill today jumps from "trigger detected" straight to Phase 0 scope → Phase 1 topology with no gating, no audience analysis, no entry-point reasoning.
 
-**This spec adds an explicit pre-mining assessment stage and a handful of supporting improvements across three incremental phases.**
+**This spec adds an explicit pre-mining assessment stage, a persona-coverage pass, and a handful of supporting improvements across four incremental phases.**
 
 ## 3. Non-Goals
 
@@ -33,15 +33,17 @@ This design does **not**:
 - Restructure the existing Phase 1–6 numbering; new work slots in as **Phase -1** ("Pre-Mining Assessment") which runs *before* Phase 0.
 - Introduce a templating engine; placeholders remain `{{UPPER_SNAKE_CASE}}` + `<angle-bracket>` where used.
 - Replace any existing template section with a flavor-agnostic rewrite in the same commit; flavor-agnostic variants are *additive* (new sections / new rows in checklist), per AGENTS.md "Known inconsistencies to not propagate".
+- Add new scripts, flags, or deliverable files in Phase 4 (persona facts are agent-gathered during Phase 2, not miner-computed).
 
 ## 4. Approach Overview
 
-Three incremental phases, each shippable independently. Each phase lands one coherent capability and updates `AGENTS.md`'s "Fixes already landed" list so it is visible in the next audit.
+Four incremental phases, each shippable independently. Each phase lands one coherent capability and updates `AGENTS.md`'s "Fixes already landed" list so it is visible in the next audit.
 
 ```
 Phase 1 · Pre-Mining Assessment (P0)       ← user-facing primary ask
 Phase 2 · Reliability & Operability (P1)    ← deps, failure modes, smoke test
 Phase 3 · Generalization & Polish (P2+P3)   ← template dedup, lang flag, paths
+Phase 4 · Persona Coverage (P4)              ← novice onboarding + evaluator decision sections
 ```
 
 Each phase is its own brainstorm → spec → plan → implement cycle, but this document pre-records intent.
@@ -216,7 +218,94 @@ Three reliability improvements that ship together:
 
 ---
 
-## 8. Cross-Phase Concerns
+## 8. Phase 4 — Persona Coverage (P4)
+
+### 8.1 Origin: persona gap analysis (2026-11-26)
+
+A persona review of the v2 deliverables found the five-file set serves the "middle" (applied engineers + potential contributors) well, while both tails are thin: the novice's **first five minutes** and the professional's **adoption decision**. Phase 4 closes those gaps with additive template sections + evidence rows. Gap tables (need → coverage before Phase 4 → where Phase 4 addresses it):
+
+**Novice (first-time visitor)**
+
+| Need | Before Phase 4 | Addressed in |
+| --- | --- | --- |
+| Plain-language elevator pitch ("what is this, one sentence") | missing — §1 has capability bullets only | `user_guide.md` §1 pitch block |
+| "Is this for me?" fit check | missing — Phase -1 answers "who reads the docs", not "does this fit my problem" | README hub persona routing + Phase 1 amendment (§8.6) |
+| Can/cannot-do list incl. non-goals | capability bullets only, no Non-goals anywhere | `user_guide.md` §1 non-goals block |
+| Error triage (error → plain meaning → fix) | 2-row symptom→suggestion table | `user_guide.md` §18.1 |
+| Glossary (jargon → plain language → code symbol) | missing | `user_guide.md` §19 |
+| Getting help (channels + how to ask a good question) | `{{DOCS_URL_OR_TODO}}` placeholder only | `user_guide.md` §20 |
+| Trust signals (vitality, release cadence) | license only in §2 | `developer_guide.md` §2 new rows |
+| Pitfalls & misconceptions ("don't panic when you see X") | missing | `user_guide.md` §21 |
+
+**Professional (evaluator / integrator / contributor)**
+
+| Need | Before Phase 4 | Addressed in |
+| --- | --- | --- |
+| Entry-point map (where execution starts, per surface) | implied in architecture narrative only | `developer_guide.md` §4.1 |
+| Test map (layout, run-one-test command, CI gates) | missing | `developer_guide.md` §16 |
+| Release & compatibility policy | version source file only | `developer_guide.md` §17 |
+| Dependency risk surface (version, license, deprecation) | plain dependency list | `developer_guide.md` §18 |
+| Quality & debt signals (TODO/FIXME hotspots, bus factor) | missing | `developer_guide.md` §19 |
+| Exhaustive config matrix | 2-knob sample | `user_guide.md` §4 exhaustive rule |
+
+Out of scope for Phase 4 (owned elsewhere or future work): runtime sequence diagrams and git-history change-coupling (future candidates); de-PINN flavor stripping (Phase 3); suitability scoring (Phase -1).
+
+### 8.2 Template changes (additive only)
+
+**`assets/templates/user_guide.md`** — 20 → 23 sections; §1–§18 numbering untouched (Phase -1 references to `user_guide.md` §1–§11 stay valid):
+
+- §1: add a one-sentence plain-language pitch line + a non-goals block after the capability bullets.
+- §4: add the exhaustive-knobs rule (enumerate every user-facing knob, not a sample).
+- §18: add subsection §18.1 "Error triage" — 3-column table: error → what it actually means → fix.
+- NEW §19 Glossary — table: term → plain-language meaning → defining code symbol.
+- NEW §20 Getting help — issue tracker, discussions/community, how-to-ask guidance.
+- NEW §21 Common pitfalls & misconceptions — table: misconception → what is actually going on.
+- Old §19 → §22 (Minimal runnable templates; subsections renumber 19.x → 22.x), old §20 → §23 (Further reading; gains a pointer to §20).
+
+**`assets/templates/developer_guide.md`** — 15 → 19 sections; §1–§15 numbering untouched (Phase -1 references to §4–§5, §15, §1–§14 stay valid):
+
+- §2: add rows — repo homepage, latest release/tag, last-commit date (vitality signal).
+- §4: add subsection §4.1 "Entry-point map" — table: surface (CLI / API / library import / plugin hook) → entry point (`path::Symbol`) → what it does.
+- NEW §16 Test map — layout, run-all + run-one commands, coverage, CI gates.
+- NEW §17 Release & compatibility policy — versioning scheme, changelog path, breaking-change policy, supported-version matrix.
+- NEW §18 Dependency risk surface — per-dependency table: version constraint, license, risk notes.
+- NEW §19 Quality & debt signals — TODO/FIXME hotspots, dead code/deprecations, bus factor (`git shortlog -sn`).
+
+**`assets/templates/README.md`** — add a persona-routing table ("You are… → start with…") before the existing reading-order list; the existing list stays.
+
+### 8.3 references changes
+
+- `references/evidence_checklist.md` — Universal section adds rows: tests-layout, CI gates detail (extend the existing workflow row), changelog/releases, git vitality (last commit, tag cadence), TODO/FIXME density scan (`rg -c`), support channels (`SUPPORT.md` / issue templates / `SECURITY.md`), entry-point scan (`__main__.py` / `cli.py` / `app.py` / `cmd/`). "Output of Phase 2" scratch note gains: test-map facts, release facts, quality signals, support channels.
+- `references/doc_outlines.md` — update `developer_guide.md` (15 → 19 sections) and `user_guide.md` (20 → 23 sections) outlines with the new entries; add grounding rules: glossary terms cite their defining symbol; the test map must contain a run-one command that actually exists in the repo.
+
+### 8.4 SKILL.md changes
+
+- Resources: template descriptions updated to the new section counts, mentioning the persona sections.
+- Phase 3 verification bullets: user guide must cover pitch/non-goals, glossary, error triage, getting help, pitfalls; developer guide must cover the entry-point map and the evaluator sections (test map, release policy, dependency risk, quality signals).
+- Phase 4 writing rules: add a rule that persona sections are mandatory content, not optional flavor — if the repo genuinely lacks a fact, keep the heading and mark it `> TODO(doc-miner): n/a — <reason>`.
+
+### 8.5 Constraints
+
+- No script changes: `gen_topology.py` and `scaffold_docs.py` untouched. Persona facts are agent-gathered (rg/git) during Phase 2, not miner-computed.
+- No new files: templates stay five, references stay four; only existing files gain sections/rows.
+- No existing section heading may be renumbered except `user_guide.md` old §19/§20 (verified by grep 2026-11-26: no external references to those numbers).
+- New placeholders follow existing conventions: `{{UPPER_SNAKE_CASE}}`, with `_OR_TODO` suffix for facts that may legitimately not exist.
+- All existing PINN-flavored sections stay untouched (Phase 3 owns de-flavoring).
+
+### 8.6 Phase 1 amendment (fold into the Phase 1 plan before executing it)
+
+`assess.md` §4 reading suggestions gain a fit-check line: for the dominant audience, one "fits / does not fit" sentence ("fits if you need X; look elsewhere for Y"). This is the user-side complement to the audience profile. The README persona routing (§8.2) is the interim mechanism until Phase 1 lands.
+
+### 8.7 Test plan
+
+1. Throwaway-repo scaffolder smoke: all five files materialize; new sections present (grep for `## 19. Glossary`, `## 16. Test map`, `### 4.1 Entry-point map`); no `{{PROJECT_NAME}}` remains after substitution.
+2. AGENTS.md gate 4 (template contract): `TEMPLATE_FILES` still resolves five names; placeholder set unchanged in kind.
+3. Cross-file consistency: `doc_outlines.md` numbers match templates; `SKILL.md` section counts updated.
+4. `AGENTS.md` "Fixes already landed" entry appended in the same commit.
+
+---
+
+## 9. Cross-Phase Concerns
 
 ### 8.1 Backwards Compatibility
 
@@ -241,13 +330,14 @@ Three reliability improvements that ship together:
 
 ---
 
-## 9. Implementation Plan
+## 10. Implementation Plan
 
 This spec hands off to the **writing-plans** skill (next step) which will produce a per-phase implementation plan. Rough sequencing:
 
 1. Phase 1 — Brainstorm spec detail → plan → implement (~6 commits)
 2. Phase 2 — Plan → implement (~3 commits)
 3. Phase 3 — Plan → implement (~8 commits)
+4. Phase 4 — Plan → implement (~2 commits)
 
 Each phase ends with a smoke test, a docs update (CHANGELOG-style entry in AGENTS.md "Fixes already landed"), and a handover line in the spec's `## 0. Revision history`.
 
@@ -258,3 +348,4 @@ Each phase ends with a smoke test, a docs update (CHANGELOG-style entry in AGENT
 | Date | Author | Change |
 |---|---|---|
 | 2026-10-11 | brainstorm session | Initial draft, 3-phase plan, user approved |
+| 2026-11-26 | persona review session | Added Phase 4 — Persona Coverage (§8); old §8/§9 renumbered to §9/§10; user approved |
