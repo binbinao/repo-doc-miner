@@ -158,7 +158,7 @@ Three reliability improvements that ship together:
 - **B2: Prerequisites declared.** `SKILL.md` gains an explicit "Prerequisites" section listing `python3 >= 3.8`, `git`, and **`rg` (ripgrep)** with rationale ("Phase 5 sweep").
 - **B3: Edge-refinement guide.** Phase 1 in `SKILL.md` is extended with a "How to refine edges" subsection: which 2–3 edges matter, how to verify by reading the manifest, common false positives, common false negatives. A new `references/edge_refinement.md` captures the deep guide.
 - **C3: Failure modes expand.** "Failure Modes to Avoid" grows from 6 to ~12 entries (see audit B+C lists).
-- **C12: Lite mode & progressive mode documented in SKILL.md as workflow branches**, no new code. New section `## Workflow Variants` enumerates "Full mode", "Lite mode (topology only)", "Progressive mode (topology → decide → continue)".
+- **C12: Lite mode & progressive mode documented in SKILL.md as workflow branches**, no new code. New section `## Workflow Variants` enumerates "Full mode", "Lite mode (topology only)", "Progressive mode (topology → decide → continue)". **— landed 2026-11-26, pulled forward ahead of Phase 2 (see §0 revision history).**
 - **C4: `scripts/smoke.py`** — A new stdlib-only script that runs:
   - Safe smoke test (the bash block from AGENTS.md, codified).
   - Topology-only smoke (verify `gen_topology.py` produces a non-empty `topology.md`).
@@ -176,7 +176,7 @@ Three reliability improvements that ship together:
 ### 6.3 SKILL.md diff summary
 
 - Add `## Prerequisites` after the frontmatter table.
-- Add `## Workflow Variants` after `## When to Use`.
+- Add `## Workflow Variants` after `## When to Use`. *(landed 2026-11-26, pulled forward ahead of Phase 2)*
 - Expand `## Failure Modes to Avoid` from 6 to ~12 items.
 - Extend `### Phase 1 · Topology Generation` with a "How to refine edges" subsection referencing `references/edge_refinement.md`.
 
@@ -349,3 +349,4 @@ Each phase ends with a smoke test, a docs update (CHANGELOG-style entry in AGENT
 |---|---|---|
 | 2026-10-11 | brainstorm session | Initial draft, 3-phase plan, user approved |
 | 2026-11-26 | persona review session | Added Phase 4 — Persona Coverage (§8); old §8/§9 renumbered to §9/§10; user approved |
+| 2026-11-26 | persona review session | Workflow Variants (Full/Lite/Progressive, §6.1 C12) pulled forward and landed ahead of Phase 2 |
