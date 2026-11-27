@@ -1,17 +1,24 @@
-# repo-doc-miner (v2 — Topology-First)
+# repo-doc-miner (v3 — Topology-First + Pre-Mining Assessment)
 
 A CodeBuddy / Claude-Code compatible **Skill** that mines an existing Git
-repository using a two-stage **topology-first → module-deep-dive** method and
-produces a coordinated Markdown doc set:
+repository using a two-stage **topology-first → module-deep-dive** method
+and produces a coordinated Markdown doc set (a repo topology map, a
+developer guide, a user guide, a from-beginner-to-expert tutorial, and a
+navigation `README.md`) — saved by default into the repository's
+`docs/guides/` folder, or into whatever directory the user passes via
+`scaffold_docs.py --out PATH`. Use this skill when the user asks to "dig
+into / mine / analyze this project and produce documentation", "generate a
+repo topology / architecture map and docs", "write onboarding docs from
+the codebase", or any similar request where the deliverable is a
+coordinated doc set derived from reading the current repository.
 
-- `topology.md` — **the primary deliverable**: a structural map (Mermaid diagrams) + entity inventory of the repository.
-- `developer_guide.md` — architecture tours, module breakdowns, extension SOPs.
-- `user_guide.md` — installation through advanced user-facing features.
-- `tutorial.md` — a beginner-to-expert, chapter-by-chapter learning path.
-- `README.md` — a navigation hub that links the other four files.
-
-Every claim is grounded in the actual code, configuration, and examples of the
-target repository — not generic knowledge.
+**v3 adds a pre-mining assessment stage** that runs before the topology
+map is produced: an opt-in `Phase -1` that answers four questions — "is
+this repo worth mining, who is this for, where should I start reading,
+and what should I do next?" — in an `assess.md` file. When the user does
+not opt in, v3 behaves exactly as v2. See
+[`references/suitability_signals.md`](./references/suitability_signals.md)
+for the rubric.
 
 ## What changed in v2
 
@@ -31,22 +38,31 @@ human then refines the detected edges by reading the most important manifests.
 
 ```
 .
-├── SKILL.md                       # Skill manifest + two-stage workflow (entry point)
+├── SKILL.md                       # Skill manifest + Phase -1..6 workflow (entry point)
 ├── assets/
 │   └── templates/                 # Markdown skeletons used as the literal starting point
-│       ├── topology.md            # NEW v2: architecture-map scaffold
-│       ├── developer_guide.md
-│       ├── user_guide.md
-│       ├── tutorial.md
-│       └── README.md
+│       ├── topology.md            # architecture-map scaffold (v2; slots removed v3)
+│       ├── developer_guide.md     # 15-section schema
+│       ├── user_guide.md          # 20-section schema
+│       ├── tutorial.md            # 10-chapter schema
+│       ├── README.md              # navigation hub
+│       ├── assess.md              # NEW v3 (Phase -1): pre-mining assessment deliverable
+│       ├── _audience_block.md     # NEW v3 (Phase -1): audience-prefix fragment
+│       └── _flavor_strip.md       # NEW v3 (Phase 3): no-op marker for future --flavor
 ├── references/                    # Loaded on demand during writing
-│   ├── topology_method.md         # NEW v2: the two-stage methodology + how to extend
+│   ├── topology_method.md         # the two-stage methodology + how to extend
 │   ├── doc_outlines.md            # canonical section-by-section outlines
-│   ├── evidence_checklist.md      # minimum files/symbols to read, now edge-ordered
-│   └── writing_style.md           # prose conventions
+│   ├── evidence_checklist.md      # minimum files/symbols to read; opens with tool-vs-expectation callout (v3)
+│   ├── writing_style.md           # prose conventions
+│   ├── suitability_signals.md     # NEW v3 (Phase -1): worth-mining rubric
+│   ├── audience_profiling.md      # NEW v3 (Phase -1): six-bucket reader taxonomy
+│   ├── reading_path_suggestions.md# NEW v3 (Phase -1): (audience × suitability-band) matrix
+│   └── edge_refinement.md         # NEW v3 (Phase 2): how to verify and refine auto-detected edges
 ├── scripts/
-│   ├── gen_topology.py            # NEW v2: scan a repo → Mermaid topology + inventory
-│   └── scaffold_docs.py           # create docs/guides/ and materialize templates
+│   ├── gen_topology.py            # scan a repo → Mermaid topology + inventory; --dry-run, --summary
+│   ├── scaffold_docs.py           # create docs/guides/ and materialize templates; --assess, --audience
+│   ├── smoke.py                   # NEW v3 (Phase 2): codified safe smoke + Phase-5 checks
+│   └── _env.sh                    # NEW v3 (Phase 3): sourceable REPO_DOC_MINER_HOME exporter
 └── LICENSE
 ```
 
@@ -97,7 +113,7 @@ python scripts/scaffold_docs.py <repo-root> \
 - **Cross-link** the five files so any one of them is a valid entry point.
 - **Mark unresolved gaps** with `TODO(doc-miner)` instead of fabricating behavior.
 
-See `SKILL.md` for the full seven-phase workflow (Phase 0–6) and
+See `SKILL.md` for the full eight-phase workflow (Phase -1, then Phase 0–6; Phase -1 is opt-in) and
 `references/topology_method.md` for the methodology and how to extend the
 topology detector to new repo families.
 

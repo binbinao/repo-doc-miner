@@ -1,5 +1,7 @@
 # {{PROJECT_NAME}} 用户文档 / User Guide
 
+> TODO(doc-miner): no remaining `{{...}}` placeholders before publishing. The `{{PROJECT_NAME}}` slot is filled by the scaffolder; every other `{{...}}` slot below is for the writing agent to fill from the Phase 2 evidence scratch note.
+
 > For end users and applied engineers who want to solve real problems with {{PROJECT_NAME}}.
 
 ---
@@ -179,5 +181,3 @@ Domain jargon this project uses, in plain language, mapped to the code that defi
 - Tutorial: [`tutorial.md`](./tutorial.md)
 - Official docs: {{DOCS_URL_OR_TODO}}
 - Support channels: see §20 (Getting help).
-
-> TODO(doc-miner): remove any remaining `{{...}}` placeholders before publishing.
