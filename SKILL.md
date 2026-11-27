@@ -1,10 +1,10 @@
 ---
 name: repo-doc-miner
 description: Mine an existing Git repository using a two-stage "topology-first → module-deep-dive" method and generate a coordinated **five-file** Markdown doc set — a repo topology map (Mermaid), developer guide, user guide, from-beginner-to-expert tutorial, and a navigation `README.md` — saved into the repository's `docs/guides/` folder. Use this skill when the user asks to "dig into / mine / analyze this project and produce documentation", "generate a repo topology / architecture map and docs", "write onboarding docs from the codebase", or any similar request where the deliverable is a coordinated doc set derived from reading the current repository.
-version: 2.0.0
+version: 3.0.0
 ---
 
-# Repo Doc Miner (v2 — Topology-First)
+# Repo Doc Miner (v3 — Topology-First + Pre-Mining Assessment)
 
 ## Overview
 
@@ -17,6 +17,18 @@ This ordering is what lets the skill scale to very large repositories: a topolog
 
 The final deliverables are: `topology.md` (the map), `developer_guide.md`, `user_guide.md`, `tutorial.md`, and a `README.md` navigation hub.
 
+## Prerequisites
+
+Tools the skill expects on `PATH` before any of its scripts run:
+
+| Tool | Why | Min version |
+|---|---|---|
+| `python3` | runs `scripts/gen_topology.py`, `scripts/scaffold_docs.py` | 3.8 (matches the script's `from __future__ import annotations` + PEP-604 typing) |
+| `git` | Phase -1 uses `git log -1 --format=%ct` for the vitality signal | any |
+| `rg` (ripgrep) | Phase 5 final sweep (`rg "TODO\(doc-miner\)"`) | any |
+
+If `rg` is missing the agent falls back to a host project file-listing tool, but the experience is best with it installed.
+
 ## When to Use
 
 Trigger this skill when the user's request matches any of these patterns:
@@ -27,21 +39,87 @@ Trigger this skill when the user's request matches any of these patterns:
 - "Generate onboarding documentation for this codebase, save into docs/"
 - Any request where (a) the primary input is the current repository, and (b) the required output is a multi-audience doc set (with or without an architecture map) written in Markdown.
 
-Do NOT trigger for: single-file API docs, README refresh only, translation tasks, or when the user already has a target doc framework (Sphinx/MkDocs site generation).
+Do NOT trigger for any of the following:
+
+- Single-file API docs.
+- README refresh only.
+- Translation tasks.
+- The user already has a target doc framework (Sphinx/MkDocs site generation).
+- The repo is **archived** or explicitly "no longer maintained" (see `references/suitability_signals.md` hard veto).
+- The repo has **no `LICENSE` and no usage hint in its README** (same source).
+- The repo is a **vendor fork** with no top-level source directory (only `node_modules/`, `dist/`, etc.).
+- The repo has **fewer than 3 readable source files** after build/vendor filtering (same source).
 
 ## Workflow Variants
 
-Full mode (all five files) is the default. Match the mode to the target repo and the user's request, and state the choice in the Phase 6 handover summary:
+The eight phases (Phase -1, then Phase 0–6) below describe the **Full mode** workflow. Phase -1 is **opt-in** (the agent only runs it when the user explicitly enables `--assess`; see below). Two lighter modes are supported without code changes — the skill's existing commands and the agent's discretion cover them. Pick the variant that matches the user's request; Phase 0 states the mode and Phase 6 reports it in the handover summary.
 
-- **Full mode** (default) — all five files. For repos with enough substance to ground the 42 content sections plus 10 tutorial chapters (roughly: several real modules, a public API surface, tests or examples).
-- **Lite mode (topology only)** — deliver `topology.md` alone. For small or single-purpose repos where full mode would emit mostly `TODO(doc-miner): n/a` sections, or when the user asks for "just the structure". Do not run `scaffold_docs.py`; the handover must list the four skipped files.
-- **Progressive mode** — hand over `topology.md` first, then pause and let the user decide whether to continue with the remaining four files. For evaluation requests, tight budgets, or uncertain scope.
+### Full mode
 
-Lite and Progressive change no scripts and no templates — only how much of the workflow runs. Phase 0 states the mode; Phase 6 reports it.
+Default. Run the seven phases (Phase 0–6) in order; add Phase -1 only when the user opts in. Use when the user wants a complete, polished doc set derived from a non-trivial repository — roughly, one with enough substance to ground the 42 content sections plus 10 tutorial chapters (several real modules, a public API surface, tests or examples).
+
+### Lite mode (topology only)
+
+Use when the user wants a quick map of the repo without the prose. The deliverables are:
+
+- `topology.md` only (Phase 1 output).
+- Skip Phases 2–6 entirely; do not run `scaffold_docs.py`.
+
+The user gets the structural map and can ask for more later. This is the right answer to "what's in this repo?", "draw me the architecture", or "just the structure" — including small or single-purpose repos where full mode would emit mostly `TODO(doc-miner): n/a` sections. The Phase 6 handover must list the four skipped files.
+
+### Progressive mode (topology → decide → continue)
+
+Use when the user wants to evaluate the topology before committing to the full mining — evaluation requests, tight budgets, or uncertain scope. The deliverables across two turns:
+
+- **Turn 1** (Lite mode): `topology.md`.
+- **Turn 2** (if the user says "continue" or similar): run Phases 2–6, producing the four prose documents and the `README.md` hub.
+
+This is the right answer to "is this repo worth a full write-up?" — the user sees the topology first and decides.
+
+### When to skip even Lite mode
+
+Even Lite mode is overkill when:
+
+- The repo is a single file or < 5 source files (the suitability rubric would mark it Low).
+- The repo is a vendor fork with no top-level source (no modules to enumerate).
+- The repo is archived (the rubric's hard veto).
+
+In all three cases, `Phase -1 · Pre-Mining Assessment` (when enabled) tells the user up front; the agent should report "skip — and why" and stop.
+
+Lite and Progressive change no scripts and no templates — only how much of the workflow runs.
 
 ## Workflow
 
-Follow these seven phases in order (Phase 0–6). Phases 1–2 are the new topology-first core; Phases 3–6 reuse the grounded-writing machinery from v1.
+Follow these eight phases in order (Phase -1, then Phase 0–6). Phase -1 is opt-in (see below); Phases 1–2 are the new topology-first core; Phases 3–6 reuse the grounded-writing machinery from v1.
+
+### Phase -1 · Pre-Mining Assessment
+
+> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`) and, when `--assess` is also set, prefixes `assess.md` itself. `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
+
+This phase answers four questions **before** any code is read or topology generated:
+
+1. **Is this repo worth mining?** — apply the rubric in `references/suitability_signals.md`. Six signals, 0–2 each (max raw = 12), rescaled to 0–5 via `round(raw * 5 / 12, 1)`. Hard vetoes (archived, no license + no usage hint, vendor fork, < 3 source files) skip without scoring.
+2. **Who is this for?** — pick one or two buckets from `references/audience_profiling.md`. Six buckets cover end-users, applied engineers, contributors, auditors, learners, and integrators.
+3. **Where to start reading?** — apply the (audience × suitability-band) matrix in `references/reading_path_suggestions.md`.
+4. **What concrete next step?** — write 1–3 imperative actions into `assess.md` §4.
+
+#### Procedure
+
+1. **Materialise the template** with the scaffolder (writes `assess.md` only when `--assess` is passed; the four non-hub docs are prefixed only when `--audience` is also passed):
+
+   ```bash
+   python scripts/scaffold_docs.py <repo-root> \
+       --project-name "<DisplayName>" [--out docs/guides] \
+       --assess [--audience <NAME>]
+   ```
+
+2. **Apply the rubric.** Compute the six signals using on-disk facts only (file counts, `git log -1 --format=%ct`, `LICENSE` presence, manifest presence, `docs/` directory size, `tests/` / `examples/` presence). The agent has all of these via standard file-listing tools; no API calls. If `git log` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1.
+3. **Pick the audience** using the detection signals in `audience_profiling.md` (README first paragraph, presence of `CONTRIBUTING.md` / `examples/` / framework classifiers, etc.). Record a primary + at most one secondary.
+4. **Resolve the entry file and jump list** from the matrix in `reading_path_suggestions.md`.
+5. **Fill `assess.md`.** Substitute every `{{...}}` placeholder with the run's findings; leave any genuinely unknown fact as `> TODO(doc-miner): <missing fact>`. Write the verdict paragraph in §5.
+6. **If a hard veto fires,** replace §1 with a "Skip — and why" paragraph per the template in `suitability_signals.md`, and stop here. Do not start Phase 0.
+
+The `assess.md` file is the **first deliverable** of the new flow and is referenced from `README.md` as the entry point for the doc set.
 
 ### Phase 0 · Scope & Output Location
 
@@ -89,6 +167,16 @@ This phase answers *"what is in this repo and how is it wired?"* before any pros
 3. **Human-refine the draft.** Open the generated `topology.md` and verify the auto-detected edges against the real files (the script is heuristic; confirm the 2–3 most structurally important edges by reading the actual manifests). Edit the Mermaid graphs so they tell the true story of the repo. The refined `topology.md` is the **first deliverable** and the structural backbone for Phase 2.
 
 4. **Produce an entity inventory table** (count + location per entity type). This is the "map" the agent keeps open while deep-diving.
+
+#### How to refine edges
+
+`gen_topology.py` reads at most `MAX_FILE_READ = 200_000` bytes per file and never follows real imports. Its two edge kinds (`source → copy`, `uses`) are heuristic, not authoritative. After the script produces a draft `topology.md`:
+
+1. **Verify the 2–3 most structurally important edges by reading the actual manifests** (the spec's Phase 1 step 3). Edit the Mermaid block in `topology.md` if any are wrong.
+2. **Spend the rest of the refinement budget on `source → copy` edges.** A misclassified copy makes Phase 2 read the same content multiple times and miss the single source.
+3. **For the deep guide** (which edges to verify first, how to verify an edge, common false positives and negatives), see [`references/edge_refinement.md`](./references/edge_refinement.md).
+
+The script's intent is to ship a useful draft quickly, not to be the final answer. Treat the auto-detected `topology.md` as a starting point; refine it as you read the manifests.
 
 ### Phase 2 · Module Deep-Dive (evidence gathering, edge-ordered)
 
@@ -155,8 +243,11 @@ Produce a short final summary containing:
 
 ### scripts/
 
-- `scripts/gen_topology.py` — **new in v2.** Scans a repo, detects entity types and dependency edges, and writes a Mermaid-backed `topology.md` (structural graph + dependency-edge graph + entity inventory + per-module deep-dive scaffold). Heuristic but safe on arbitrary repos. Run it at the start of Phase 1.
-- `scripts/scaffold_docs.py` — creates `<repo>/docs/guides/` and materializes the five document templates from `assets/templates/` with their `{{PROJECT_NAME}}` placeholder substituted (existing files are skipped unless `--force` is passed). Run at the start of Phase 4.
+- `scripts/gen_topology.py` — **new in v2.** Scans a repo, detects entity types and dependency edges, and writes a Mermaid-backed `topology.md` (structural graph + dependency-edge graph + entity inventory + per-module deep-dive scaffold). Heuristic but safe on arbitrary repos. Run it at the start of Phase 1. Accepts two opt-in flags: `--dry-run` (print detected counts + would-be output path without writing) and `--summary` (print a 1-screen human summary of the detected inventory; the topology file is still written unless `--dry-run` is also set).
+- `scripts/scaffold_docs.py` — creates `<repo>/docs/guides/` and materializes the five document templates from `assets/templates/` with their `{{PROJECT_NAME}}` placeholder substituted (existing files are skipped unless `--force` is passed). Run at the start of Phase 4. Accepts two opt-in flags: `--assess` (materialise `assess.md`) and `--audience NAME` (prefix the four non-hub docs with `_audience_block.md`); both are off by default, so a v2 behaviour is preserved when neither is passed.
+- `scripts/smoke.py` — **Phase 2.** Codified AGENTS.md "safe smoke test" plus Phase-5 checks. Run after any change to `gen_topology.py` or `scaffold_docs.py` to confirm the scaffolder + topology pipeline still produces a non-empty output and the published templates are well-formed. Exits 0 on success; supports `--check-only` (skip scaffolder writes) and `--strict` (publish-gate on pending placeholders and `<angle-bracket>` slots).
+- `scripts/_env.sh` — **Phase 3.** Sourceable shell snippet that exports `REPO_DOC_MINER_HOME` (the directory containing this skill). Use when invoking the skill's scripts from outside the skill root: `source /path/to/repo-doc-miner/scripts/_env.sh && python "$REPO_DOC_MINER_HOME/scripts/scaffold_docs.py" <repo-root>`. No runtime dependency — purely a path helper.
+- `scripts/check_resources.py` — **Phase 5.** Drift detector: cross-checks SKILL.md's `## Resources` section against the actual files under `assets/templates/`, `references/`, and `scripts/`. Always exits 0; the report is informational. Use to spot drift after adding a new template or reference.
 
 ### assets/templates/
 
@@ -166,7 +257,10 @@ Markdown skeletons carrying a fixed section schema. Use them as the literal star
 - `assets/templates/developer_guide.md` — 19-section schema (overview → architecture → entry-point map → module tours → test map → release policy → dependency risk → quality signals → extension SOPs → debugging).
 - `assets/templates/user_guide.md` — 23-section schema (install → runtime config → core objects → main loop → advanced features → FAQ + error triage → glossary → getting help → pitfalls → minimal runnable examples).
 - `assets/templates/tutorial.md` — 10-chapter "from beginner to expert" schema with slots for real example file paths.
-- `assets/templates/README.md` — navigation hub that indexes the other four files.
+- `assets/templates/README.md` — navigation hub that indexes the other four files; mentions the optional `assess.md` first deliverable.
+- `assets/templates/assess.md` — **Phase -1 deliverable.** Materialised only when the scaffolder is invoked with `--assess`. The agent fills in suitability score, audience, reading path, and verdict before any of the other docs are written.
+- `assets/templates/_audience_block.md` — **Phase -1 fragment.** Prepended to the four non-hub generated docs (and to `assess.md` when `--assess` is also set) when the scaffolder is invoked with `--audience NAME`. `README.md` is the hub and is never prefixed.
+- `assets/templates/_flavor_strip.md` — **Phase 3 marker.** No-op documentation file that describes how a future `--flavor FLAVOR_NAME` scaffolder flag should structure template sections (Phase 4 wired the consumer side; this is the contract doc). The current scaffolder does not read this file.
 
 ### references/
 
@@ -176,6 +270,10 @@ Loaded into context on demand.
 - `references/doc_outlines.md` — canonical section-by-section outlines, with guidance on what each section must contain and how to source the evidence.
 - `references/evidence_checklist.md` — the minimum set of files and symbols to read during Phase 2, grouped by repo flavor (Python ML library, Python CLI, Node web app, Rust crate, Go service). Updated to be edge-ordered.
 - `references/writing_style.md` — writing-style conventions (tone, bilingual rules, code-citation format, TODO markers).
+- `references/suitability_signals.md` — **Phase -1.** Worth-mining rubric: six 0–2 signals rescaled to a 0–5 score, four hard vetoes, and a "skip — and why" branch.
+- `references/audience_profiling.md` — **Phase -1.** Six-bucket reader taxonomy (first-time-end-user, applied-engineer, contributor, auditor, learner, integrator) and the on-disk signals that suggest each.
+- `references/reading_path_suggestions.md` — **Phase -1.** Deterministic (audience × suitability-band) → entry-point matrix.
+- `references/edge_refinement.md` — **Phase 2.** Practitioner's guide to verifying and refining the auto-detected dependency edges emitted by `gen_topology.py`. After Phase 1 produces a draft `topology.md`, use this to confirm the 2–3 most structurally important edges and to catch the common false positives (docs mentioning keywords, test fixtures, vendored content) and false negatives (relative imports, generated artifacts).
 
 ## Failure Modes to Avoid
 
@@ -185,3 +283,9 @@ Loaded into context on demand.
 - Mistaking a synced copy for an independent implementation because you read it before its source. Always follow `source → copy` edges.
 - Clobbering existing `docs/` content. Always write into a dedicated sub-folder (`docs/guides/` by default).
 - Forgetting to produce the navigation `README.md`; without it the other four files feel disconnected.
+- **Mining a repo with no git history.** `gen_topology.py` reads the working tree but the vitality signal uses `git log -1 --format=%ct`; if the repo is not a Git repo or has no commits, that signal scores 0. Do not assume the rest of the file is broken — the on-disk tree is still valid; only Vitality is 0.
+- **Mining a pure-docs repo (no code).** The topology will be empty or near-empty; the entity inventory will show 0 modules. The prose docs will be of limited value. If the user asks, recommend `--assess` (the suitability rubric's "Test/example presence" signal will mark it Low and the verdict will say "skip — and why").
+- **Mining a > 10k-file repo.** `gen_topology.py`'s `--max-entities` defaults to 500; `--max-edges` defaults to 200. Above these the script truncates (the edge cap always warns on stderr; the entity cap warns only under `--verbose`). Either pass higher caps (`--max-entities 2000 --max-edges 800`) or pre-warn the user that the topology is partial.
+- **Treating `git log` failure as a fatal error.** The suitability rubric's not-a-git fallback scores Vitality = 0 and records the reason in `assess.md` §1. The other five signals are computed from the on-disk tree and remain valid. Do not abort the assessment just because the target isn't a Git repo.
+- **Mining a monorepo as a single repo.** The script treats the top-level directory as one repo; each sub-package's `pyproject.toml` / `package.json` is a `py-package` / `node-package` entity. The inventory table will show them all but the prose docs will be confused about which "main" package to focus on. Mine each sub-package separately, or accept the lossy top-level view.
+- **Skipping `--audience NAME` when the user has stated their role clearly.** If the user said "I'm a contributor" or "I just need a quick overview", do not skip `--audience` — the prefix adds a one-line blockquote that costs < 100 bytes and saves the reader several minutes of orientation.

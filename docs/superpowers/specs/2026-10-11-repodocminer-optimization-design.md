@@ -61,7 +61,7 @@ Add a `Phase -1` step that runs **before** Phase 0 and produces a single documen
 3. **Where should each audience start?** — *Reading paths* (one suggested entry point + order per audience).
 4. **What concrete next step should the user take?** — *Reading suggestions* (1–3 actions).
 
-The Phase -1 output becomes front-matter on `topology.md` and is referenced from `README.md`.
+The Phase -1 output is a standalone `assess.md` file in the same `docs/guides/` directory; the `README.md` (hub) references it from its file table when present (only when `--assess` was used). `topology.md` does **not** carry a `## 0. Pre-Mining Assessment` section — the assessment is a peer file, not front-matter.
 
 ### 5.2 New files
 
@@ -69,7 +69,7 @@ The Phase -1 output becomes front-matter on `topology.md` and is referenced from
 |---|---|
 | `references/audience_profiling.md` | Defines the audience taxonomy + how to detect which audience is dominant for a given repo (signals: README positioning, audience phrases, code style, presence of `examples/` vs `tests/` vs `docs/`). |
 | `references/suitability_signals.md` | Enumerates the ~6 hard signals, scoring rubric (0–5), hard vetoes, and the "skip — and why" message template. |
-| `references/reading_path_suggestions.md` | Maps audience → recommended entry point + order across the 5 generated docs. |
+| `references/reading_path_suggestions.md` | Maps audience → recommended entry point + order across the 4 non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`). |
 | `assets/templates/assess.md` | The Phase -1 deliverable template; agent fills it during execution. |
 | `assets/templates/_audience_block.md` | (Reusable fragment) the `> Audience: …` block embedded at the head of `topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`. |
 
@@ -79,7 +79,7 @@ Six buckets; chosen because they map cleanly to doc-set sections that already ex
 
 | Audience | Best entry file | Why |
 |---|---|---|
-| **First-time end user** | `user_guide.md` §1–§11 | Capability list + install + minimal example |
+| **First-time end user** | `user_guide.md` §1–§11 + §18–§19 | Capability list + install + minimal runnable + FAQ |
 | **Applied engineer (specific task)** | `tutorial.md` matching chapter | Pattern-matching |
 | **Contributor / framework developer** | `developer_guide.md` end-to-end | Architecture + extension SOPs |
 | **Auditor / reviewer** (security, licensing, code quality) | `topology.md` §1–§3 + `developer_guide.md` §15 | Structure + contribution SOPs |
@@ -90,7 +90,7 @@ Detected by `references/audience_profiling.md` signals (README's "Who this is fo
 
 ### 5.4 Suitability scoring (initial draft)
 
-Six signals, each scored 0–2 (max 6 → rescaled to 0–5):
+Six signals, each scored 0–2 (max 12 → rescaled to 0–5):
 
 | Signal | Source | 0 = bad | 1 = ok | 2 = good |
 |---|---|---|---|---|
@@ -103,10 +103,12 @@ Six signals, each scored 0–2 (max 6 → rescaled to 0–5):
 
 **Hard vetoes** (force score → 0 + emit skip reason):
 
-- Repo is **archived** (GitHub `archived=true`; cannot detect from stdlib → best-effort via `.github/CODEOWNERS`/branch naming or README notice).
+- Repo is **archived** — best-effort detection: presence of `ARCHIVED.md`, or a README banner stating the project is archived/no longer maintained (e.g. `[![No Maintenance Intended](...)](...)`, the strings `no longer maintained`, `archived`, or `sunset`).
 - Repo has **no LICENSE** AND README has **no usage hint** (defined as: any of the strings `Install`, `Usage`, `Quickstart`, `pip install`, `npm install`, `cargo install`, `go install`, `go get`, or a fenced `bash` block within the first 200 lines).
 - Repo is a **vendor fork** (no top-level source dir; only `node_modules/`, `dist/`, etc.).
 - Repo has **< 3 readable source files** after `.gitignore` style filtering.
+
+**Not-a-git fallback.** If `git log -1 --format=%ct` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1. The other five signals are computed from the on-disk tree and remain valid.
 
 The agent computes signals manually in Phase -1 (it has `git` available via shell, file listing via tools). No new script in Phase 1 — keeping scope minimal.
 
@@ -116,7 +118,7 @@ The agent computes signals manually in Phase -1 (it has `git` available via shel
 
 | Audience \ Suitability | High (4–5) | Mid (2–3) | Low (0–1) |
 |---|---|---|---|
-| First-time end user | `user_guide.md` §1–§11 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 only | Skip — explain in assess.md |
+| First-time end user | `user_guide.md` §1–§11 + §18–§19 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 + §19 only | Skip — explain in assess.md |
 | Applied engineer | `tutorial.md` Ch. matching task | Same, narrower (just relevant chapter) | Skip |
 | Contributor | `developer_guide.md` + `topology.md` | Same | Skip |
 | Auditor | `topology.md` + `developer_guide.md` §15 | `topology.md` only | Skip |
@@ -130,15 +132,15 @@ The mapping is a plain table — no logic, agent reads the row.
 | File | Change |
 |---|---|
 | `scripts/gen_topology.py` | **No change in Phase 1.** The script's job is topology, not assessment. (C5 is in Phase 3.) |
-| `scripts/scaffold_docs.py` | New flags: `--assess` (**default off**; when set, writes `assess.md` from new template) and `--audience <name>` (**default off**; when set, embeds `_audience_block.md` at top of each of the 5 files). Both flags off by default so existing smoke tests stay green. When `--assess` is used without `--audience`, only `assess.md` is added; the 5 templates are not modified. |
-| `assets/templates/_audience_block.md` | New fragment: `<!-- audience: {{AUDIENCE}} -->` followed by a 2-line summary table. Embedded verbatim at the top of each generated doc when `--audience` is set. |
+| `scripts/scaffold_docs.py` | New flags: `--assess` (**default off**; when set, writes `assess.md` from new template) and `--audience <name>` (**default off**; when set, prefixes the 4 non-hub docs — `topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md` — with `_audience_block.md`. `README.md` is the hub and is **not** prefixed; the block's own text references it. When `--assess` is also passed, `assess.md` is also prefixed with the audience block; this is consistent with `assess.md` being the first deliverable of the Phase -1 flow.) Both flags off by default so existing smoke tests stay green. When `--assess` is used without `--audience`, only `assess.md` is added; the 5 templates are not modified. When `--audience` is used without `--assess`, the 4 non-hub docs are prefixed and `assess.md` is not written. |
+| `assets/templates/_audience_block.md` | New fragment: `<!-- audience: {{AUDIENCE}} -->` followed by a 2-line audience blockquote (`> **Audience:** {{AUDIENCE}} — …`). Embedded verbatim at the top of each generated doc when `--audience` is set. |
 
-The audience block is rendered as an HTML comment + a visible table so both machine readers (to skip it) and humans (to read it) work. The placeholder convention stays `{{...}}` and the agent fills it during Phase 4.
+The audience block is rendered as an HTML comment + a visible blockquote so both machine readers (to skip it) and humans (to read it) work. The placeholder convention stays `{{...}}` and the agent fills it during Phase 4.
 
 ### 5.7 SKILL.md diff summary
 
 - **Phase numbering decision (lock this in):** keep the additive `Phase -1` prefix to avoid breaking all internal references in templates / references / README. Existing `Phase 0–6` numbers stay untouched. The new section in `SKILL.md` is titled `Phase -1 · Pre-Mining Assessment` and listed before `Phase 0`.
-- New `## When NOT to Use` entries informed by the suitability vetoes.
+- New `Do NOT trigger for:` entries (under `## When to Use`) informed by the suitability vetoes.
 - New `## Prerequisites` section (B2 from audit, **also lands in Phase 1** because the assessment itself uses `git log`).
 
 ### 5.8 Test plan
@@ -311,7 +313,7 @@ Out of scope for Phase 4 (owned elsewhere or future work): runtime sequence diag
 
 - All new `scaffold_docs.py` and `gen_topology.py` flags default to current behavior. Existing smoke tests stay green.
 - Existing template `{{PROJECT_NAME}}` substitution unchanged.
-- `topology.md` template gains a new `## 0. Pre-Mining Assessment` section when `--audience` is passed; without the flag the section is omitted (preserves current diff stability).
+- The Phase -1 output is a standalone `assess.md` (a new template), **not** a `## 0.` section prepended to `topology.md`. The hub README carries the conditional reference; `topology.md` is unchanged.
 
 ### 8.2 Documentation Discipline
 

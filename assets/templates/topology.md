@@ -6,7 +6,7 @@
 
 ## 1. Structural Topology
 
-> Top-level structure: each subgraph is a top-level module; nodes are the entities it contains, color-coded by kind. Node ids are derived from the repo-relative path (`sanitize_id`), and the label is `<name><br/><kind>`. Build/vendor directories (`.git`, `node_modules`, `dist`, `.github`, `*.egg-info`, …) are skipped.
+> Top-level structure: each subgraph is a top-level module; nodes are the entities it contains, color-coded by kind. Node ids are derived from the repo-relative path (`sanitize_id`), and the label is the entity name and kind joined by a `<br/>` line break. Build/vendor directories (`.git`, `node_modules`, `dist`, `.github`, `*.egg-info`, …) are skipped.
 
 ```mermaid
 graph TD
@@ -33,8 +33,8 @@ graph LR
 
 | Edge | Mechanism | How to verify |
 | --- | --- | --- |
-| `<source> → <copy>` | `<what syncs them, e.g. sync-agent-skills.py or system.file:>` | `<script/field to check>` |
-| `<a> → <b>` | `<relationship>` | `<how to confirm>` |
+| (source file path) → (copy file path) | (sync mechanism, e.g. `sync-agent-skills.py` or `system.file:`) | (script/field to confirm) |
+| (source entity) → (target entity) | (relationship) | (how to confirm) |
 
 ## 3. Entity Inventory
 
@@ -42,23 +42,23 @@ graph LR
 
 | Kind | Count | Example locations |
 | --- | --- | --- |
-| `<kind>` | `<n>` | `<path-glob>` |
+| (kind, e.g. `module`, `script`, `py-package`) | (count) | (comma-separated paths from `gen_topology.py`) |
 
 ## 4. Module Deep-Dive Scaffold
 
 > Filled during Phase 2 (module deep-dive), walking modules **along the edges above**, highest complexity first.
 
-### <module-a>
+### (module name, e.g. `scripts`)
 
-- **<entity>** (`<kind>`) — `<path>`
-  - Responsibility: `<one-liner>`
-  - References: `<entities this one points to>`
-  - > TODO(doc-miner): `<any gap>`
+- **(entity name)** (`(kind)`) — `(repo-relative path)`
+  - Responsibility: (one-line summary of what this module does)
+  - References: (entities this one points to, in `gen_topology.py` terminology)
+  - > TODO(doc-miner): (any unresolved gap)
 
-### <module-b>
+### (module name, e.g. `assets`)
 
-- **<entity>** (`<kind>`) — `<path>`
-  - Responsibility: `<one-liner>`
+- **(entity name)** (`(kind)`) — `(repo-relative path)`
+  - Responsibility: (one-line summary)
 
 ---
 

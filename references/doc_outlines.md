@@ -104,5 +104,7 @@ Suffix conventions used by the templates:
 - `_SNIPPET` / `_CODE` — a condensed code block (≤ ~30 lines, fence language set).
 - `_NARRATIVE` — prose that explains a mechanism, not a list.
 - `_SIG` — a real constructor/function signature copied from source.
+- `_OR_NONE` — the value may be absent; when absent, replace with the literal word "None" (e.g. `{{SECONDARY_AUDIENCE_OR_NONE}}`).
+- `_RELATIVE` — a path relative to the doc-set root (not the repository root), distinct from `_FILE` which is repo-relative. Use when the link target lives inside `docs/guides/` itself (e.g. `{{ENTRY_FILE_RELATIVE}}`).
 
 If a template slot has no counterpart in the target repo (e.g. a PINN-only section in a plain CLI repo), mark the section with a single `> TODO(doc-miner): n/a — <reason>` line and keep the heading, so the document structure stays comparable across repos.

@@ -4,7 +4,7 @@
 
 **Goal:** Add a Phase -1 "Pre-Mining Assessment" capability to `repo-doc-miner` that, before any topology generation runs, produces an `assess.md` answering "is this repo worth mining, who should read it, and where to start?" with two new optional flags on `scripts/scaffold_docs.py`.
 
-**Architecture:** Three new `references/` files define the rubric (suitability signals, audience taxonomy, reading-path matrix). One new template (`assess.md`) and one reusable fragment (`_audience_block.md`) get materialized only when the user passes `--assess` / `--audience` to the scaffolder. `SKILL.md` gains a `Phase -1` section + a `Prerequisites` block + 4 new "When NOT to Use" entries; `AGENTS.md` bookkeeping is updated in the same commit. No third-party dependencies. Both new flags default to **off**, so the existing smoke test from `AGENTS.md` stays byte-identical.
+**Architecture:** Three new `references/` files define the rubric (suitability signals, audience taxonomy, reading-path matrix). One new template (`assess.md`) and one reusable fragment (`_audience_block.md`) get materialized only when the user passes `--assess` / `--audience` to the scaffolder. `SKILL.md` gains a `Phase -1` section + a `Prerequisites` block + 4 new `Do NOT trigger for:` entries (under `## When to Use`); `AGENTS.md` bookkeeping is updated in the same commit. No third-party dependencies. Both new flags default to **off**, so the existing smoke test from `AGENTS.md` stays byte-identical.
 
 **Tech Stack:** Python 3.8+ stdlib only (`argparse`, `pathlib`, `dataclasses`), Markdown templates.
 
@@ -20,9 +20,9 @@
 | `references/audience_profiling.md` | new | Audience taxonomy + how to detect it |
 | `references/reading_path_suggestions.md` | new | Audience × suitability → entry-point mapping |
 | `assets/templates/assess.md` | new | Template the agent fills during Phase -1 |
-| `assets/templates/_audience_block.md` | new | Reusable fragment prefixed to each doc when `--audience` is set |
+| `assets/templates/_audience_block.md` | new | Reusable fragment prefixed to the four non-hub docs when `--audience` is set |
 | `scripts/scaffold_docs.py` | modify | Add `--assess` and `--audience` flags; conditional materialization |
-| `SKILL.md` | modify | New `Phase -1` section + `Prerequisites` + expanded `When NOT to Use` |
+| `SKILL.md` | modify | New `Phase -1` section + `Prerequisites` + expanded `Do NOT trigger for:` list (under `## When to Use`) |
 | `AGENTS.md` | modify | Append to "Fixes already landed" list |
 
 The scaffolder is the only code file touched in this phase; `gen_topology.py` is **not** changed (Phase 3 work).
@@ -33,7 +33,7 @@ The scaffolder is the only code file touched in this phase; `gen_topology.py` is
 
 - **stdlib-only Python.** No third-party imports added to `scripts/`.
 - **No new test framework.** Verification uses throwaway-directory bash smoke tests, consistent with `AGENTS.md` "Testing & QA".
-- **No templating engine.** Placeholders stay `{{UPPER_SNAKE_CASE}}`; the new fragment uses `<!-- audience: {{AUDIENCE}} -->` + a 2-line table.
+- **No templating engine.** Placeholders stay `{{UPPER_SNAKE_CASE}}`; the new fragment uses `<!-- audience: {{AUDIENCE}} -->` + a 2-line audience blockquote.
 - **Backwards-compatible flags.** Both new scaffolder flags default to **off**; without them, output is byte-identical to the current scaffolder.
 - **Phase numbering preserved.** Existing phases remain `Phase 0–6`; new work lives at `Phase -1` (additive prefix only).
 - **Headings monotonic.** Every new doc file starts at `#` (h1) and never skips a level.
@@ -72,18 +72,20 @@ Create `references/suitability_signals.md` with the exact content below.
 | **Documentation quality** | existing `docs/` directory size + completeness | none | partial | substantial (≥ 5 Markdown files) |
 | **Test/example presence** | `tests/` or `examples/` directory | neither | one | both |
 
-**Score formula:** raw = sum of the six 0/1/2 columns; rescaled = `round(raw * 5 / 6, 1)`. Bands: `4.0–5.0` = High, `2.0–3.9` = Mid, `0.0–1.9` = Low.
+**Score formula:** raw = sum of the six 0/1/2 columns (range 0–12); rescaled = `round(raw * 5 / 12, 1)` (maps 0–12 → 0–5). Bands: `4.0–5.0` = High (raw ≥ 10), `2.0–3.9` = Mid (raw 5–9), `0.0–1.9` = Low (raw 0–4).
 
 ## Hard vetoes (force score → 0 + emit skip reason)
 
 A repo is **skipped without scoring** when any of the following holds:
 
-1. **Archived** — best-effort detection: presence of `ARCHIVED.md`, `.github/CODEOWNERS` with a "maintainers needed" notice, or a README banner stating the project is archived/no longer maintained.
+1. **Archived** — best-effort detection: presence of `ARCHIVED.md`, or a README banner stating the project is archived/no longer maintained (e.g. `[![No Maintenance Intended](...)](...)`, or the strings `no longer maintained`, `archived`, or `sunset`).
 2. **No license + no usage hint** — `LICENSE` (or `LICENSE.md`) is absent AND the README's first 200 lines contain none of: `Install`, `Usage`, `Quickstart`, `pip install`, `npm install`, `cargo install`, `go install`, `go get`, or a fenced `bash` block.
 3. **Vendor fork** — no top-level source directory exists (only `node_modules/`, `dist/`, `vendor/`, `third_party/`, `*.egg-info/`).
 4. **Too small** — fewer than 3 readable source files remain after applying the script's `IGNORE_DIRS` / `.gitignore` filtering.
 
-When a veto fires, write `> TODO(doc-miner): skip — <veto reason>` to `assess.md` §1 and stop.
+When a veto fires, write a `> TODO(doc-miner): skip — …` marker naming the veto reason to `assess.md` §1 and stop.
+
+**Not-a-git fallback.** If `git log -1 --format=%ct` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1. The other five signals are computed from the on-disk tree and remain valid.
 
 ## "Skip — and why" message template
 
@@ -115,11 +117,11 @@ Expected: `OK`. Any non-zero exit or missing echo is a failure.
 Run:
 ```bash
 ! rg -q '\{\{[A-Z_]+\}\}' references/suitability_signals.md \
-  && ! rg -q '<[a-z-]+>' references/suitability_signals.md \
+  && ! rg -q '<[a-z -]+>' references/suitability_signals.md \
   && echo OK
 ```
 
-Expected: `OK`. Per `references/doc_outlines.md` placeholder convention, content files (not templates) must not carry unsubstituted placeholders.
+Expected: `OK`. Per `references/doc_outlines.md` placeholder convention, content files (not templates) must not carry unsubstituted placeholders. The tightened regex `<[a-z -]+>` matches slots containing spaces (e.g. `<entry file>`), unlike the previous `<[a-z-]+>` which only matched single-word slots.
 
 - [ ] **Step 4: Commit**
 
@@ -153,14 +155,16 @@ Create `references/audience_profiling.md` with the exact content below.
 
 | Bucket | One-line definition | Best entry file |
 |---|---|---|
-| **first-time-end-user** | Has the repo installed (or about to) and wants to do a specific thing | `user_guide.md` §1–§11 |
+| **first-time-end-user** | Has the repo installed (or about to) and wants to do a specific thing | `user_guide.md` §1–§11 + §18–§19 |
 | **applied-engineer** | Knows the domain; needs the *recipe* matching their task | `tutorial.md` (matching chapter) |
 | **contributor** | Wants to read source, extend the framework, or submit a PR | `developer_guide.md` (end-to-end) |
 | **auditor** | Reviewing for security, licensing, code-quality, supply-chain risk | `topology.md` §1–§3 + `developer_guide.md` §15 |
 | **learner** | No specific use case yet; wants a guided curriculum | `tutorial.md` Ch. 1 → 10 |
 | **integrator** | Plugging the repo into another system (CI, IDE, automation) | `topology.md` + `developer_guide.md` §4–§5 |
 
-The agent picks **at most two** buckets per target repo (a dominant + a secondary). Picking zero is allowed only when no signal matches; in that case the scaffolder must be invoked with no `--audience` flag (the audience block is omitted from all five files).
+The agent picks **at most two** buckets per target repo (a dominant + a secondary). Picking zero is allowed only when no signal matches; in that case the scaffolder must be invoked with no `--audience` flag.
+
+> Detection rubric: see `assets/templates/_audience_block.md` and the `--audience` flag on `scripts/scaffold_docs.py`. When invoked, the audience block is prefixed onto the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed.
 
 ## Detection signals (on-disk, stdlib only)
 
@@ -189,8 +193,8 @@ When signals disagree (e.g., `CONTRIBUTING.md` is present but the README also sc
 The agent writes a 2-line summary at `assess.md` §2:
 
 ```
-**Primary audience:** <bucket> — <one-sentence rationale citing the signal>
-**Secondary audience (if any):** <bucket> — <one-sentence rationale>
+**Primary audience:** the chosen bucket — one-sentence rationale citing the signal
+**Secondary audience (if any):** the chosen bucket — one-sentence rationale
 ```
 ```
 
@@ -213,7 +217,7 @@ Expected: `OK`.
 Run:
 ```bash
 ! rg -q '\{\{[A-Z_]+\}\}' references/audience_profiling.md \
-  && ! rg -q '<[a-z-]+>' references/audience_profiling.md \
+  && ! rg -q '<[a-z -]+>' references/audience_profiling.md \
   && echo OK
 ```
 
@@ -262,9 +266,9 @@ When a hard veto from `suitability_signals.md` fires, the agent skips the matrix
 
 | Audience \\ Band | High | Mid | Low |
 |---|---|---|---|
-| `first-time-end-user` | `user_guide.md` §1–§11 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 only | Skip |
+| `first-time-end-user` | `user_guide.md` §1–§11 + §18–§19 + `tutorial.md` Ch. 1–4 | `user_guide.md` §1–§11 + §19 only | Skip |
 | `applied-engineer` | `tutorial.md` (chapter matching the task) | Same, narrower: just the matching chapter + its exercises | Skip |
-| `contributor` | `developer_guide.md` end-to-end + `topology.md` §1–§3 | `developer_guide.md` §1–§14 + `topology.md` §1–§3 | Skip |
+| `contributor` | `developer_guide.md` end-to-end + `topology.md` §1–§3 | Same as High (full `developer_guide.md` + `topology.md` §1–§3) | Skip |
 | `auditor` | `topology.md` + `developer_guide.md` §15 | `topology.md` only | Skip |
 | `learner` | `tutorial.md` Ch. 1 → 10 (sequential) | `tutorial.md` Ch. 1–4, then re-assess | Skip |
 | `integrator` | `topology.md` + `developer_guide.md` §4–§5 | `topology.md` only | Skip |
@@ -279,9 +283,9 @@ When the band is Low (no veto) the agent writes one short paragraph naming the w
 
 After picking the entry file, the agent writes 1–3 imperative actions. Templates:
 
-- For High: `Open \`<entry file>\`. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run \`Phase -1\` with a different audience.`
-- For Mid: `Skim \`<entry file>\`'s first 100 lines. If the first concrete API or class matches what you need, proceed; otherwise stop.`
-- For Skip: `<remediation sentence>; re-run \`Phase -1\` afterwards.`
+- For High: `Open the entry file. If the suggested section lands a working example within 30 minutes, treat the doc set as a fit; otherwise re-run \`Phase -1\` with a different audience.`
+- For Mid: `Skim the entry file's first 100 lines. If the first concrete API or class matches what you need, proceed; otherwise stop.`
+- For Skip: `the remediation sentence; re-run \`Phase -1\` afterwards.`
 
 These are starting points, not fixed wording — adjust per audience when needed (e.g., add `git clone` for an integrator audience).
 ```
@@ -305,7 +309,7 @@ Expected: `OK`.
 Run:
 ```bash
 ! rg -q '\{\{[A-Z_]+\}\}' references/reading_path_suggestions.md \
-  && ! rg -q '<[a-z-]+>' references/reading_path_suggestions.md \
+  && ! rg -q '<[a-z -]+>' references/reading_path_suggestions.md \
   && echo OK
 ```
 
@@ -331,7 +335,7 @@ git commit -m "docs(refs): add reading_path_suggestions.md (Phase -1 matrix)"
 
 - [ ] **Step 1: Write the file content**
 
-Create `assets/templates/assess.md` with the exact content below. Note: the only `{{...}}` placeholder that the scaffolder substitutes is `{{PROJECT_NAME}}`. Everything else is the agent's job in Phase 4.
+Create `assets/templates/assess.md` with the exact content below. Note: the only `{{...}}` placeholder that the scaffolder substitutes is `{{PROJECT_NAME}}`. Everything else is the agent's job in Phase -1 (filling the rubric findings, audience, reading path, and verdict).
 
 ```markdown
 # {{PROJECT_NAME}} — Pre-Mining Assessment
@@ -361,14 +365,14 @@ Create `assets/templates/assess.md` with the exact content below. Note: the only
 **Primary audience:** {{PRIMARY_AUDIENCE}} — {{PRIMARY_AUDIENCE_RATIONALE}}
 **Secondary audience (if any):** {{SECONDARY_AUDIENCE_OR_NONE}} — {{SECONDARY_AUDIENCE_RATIONALE_OR_NONE}}
 
-> Detection rubric: [`references/audience_profiling.md`](../../references/audience_profiling.md).
+> Detection rubric: `references/audience_profiling.md`.
 
 ## 3. Where to start reading
 
 **Entry file:** `{{ENTRY_FILE_RELATIVE}}`
 **Jump list:** {{ENTRY_JUMP_LIST}}
 
-> Matrix source: [`references/reading_path_suggestions.md`](../../references/reading_path_suggestions.md).
+> Matrix source: `references/reading_path_suggestions.md`.
 
 ## 4. Reading suggestions
 
@@ -425,29 +429,29 @@ git commit -m "feat(templates): add assess.md template (Phase -1 deliverable)"
 - Create: `assets/templates/_audience_block.md`
 
 **Interfaces:**
-- Consumes: `{{AUDIENCE}}` placeholder substituted by scaffold_docs.py in Task 7
-- Produces: a fragment that is prepended to each of the 5 generated docs when `--audience` is passed
+- Consumes: `{{AUDIENCE}}` and `{{PROJECT_NAME}}` placeholders, both substituted by scaffold_docs.py in Task 7. The visible audience name on each materialised doc equals the value passed via `--audience NAME` (no separate label mapping).
+- Produces: a fragment that is prepended to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) when `--audience` is passed; `README.md` is the hub and is **not** prefixed
 
 - [ ] **Step 1: Write the file content**
 
-Create `assets/templates/_audience_block.md` with the exact content below. The file is prefixed to every generated doc; the leading `<!-- audience: ... -->` is an HTML comment so renderers do not display it but machine tools can still parse it.
+Create `assets/templates/_audience_block.md` with the exact content below. The file is prefixed to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed. The leading `<!-- audience: ... -->` is an HTML comment so renderers do not display it but machine tools can still parse it.
 
 ```markdown
 <!-- audience: {{AUDIENCE}} -->
 
-> **Audience:** {{AUDIENCE_LABEL}} — generated by `repo-doc-miner` `Phase -1 · Pre-Mining Assessment`. Other readers may find [`{{PROJECT_NAME}}` guide hub](./README.md) useful; their recommended entry file is on the hub's first page.
+> **Audience:** {{AUDIENCE}} — generated by `repo-doc-miner` `Phase -1 · Pre-Mining Assessment`. Other readers may find [`{{PROJECT_NAME}}` guide hub](./README.md) useful; their recommended entry file is on the hub's first page.
 
 ```
 
-> **Note for the engineer:** the file ends with a literal blank line so concatenation produces a paragraph break before the original template's `#` heading. Do not strip the trailing blank line.
+> **Note for the engineer:** the file ends with a literal blank line (so the rendered file is exactly 4 lines: comment, blank, audience blockquote, blank). The trailing blank line produces a paragraph break when the scaffolder concatenates this fragment before another template's `#` heading. Do not strip the trailing blank line.
 
-- [ ] **Step 2: Verify the file exists and contains the comment + table markers**
+- [ ] **Step 2: Verify the file exists and contains the comment + audience blockquote**
 
 Run:
 ```bash
 test -f assets/templates/_audience_block.md \
   && rg -q '^<!-- audience: \{\{AUDIENCE\}\} -->$' assets/templates/_audience_block.md \
-  && rg -q '^\*\*Audience:\*\* \{\{AUDIENCE_LABEL\}\}' assets/templates/_audience_block.md \
+  && rg -q '^> \*\*Audience:\*\* \{\{AUDIENCE\}\}' assets/templates/_audience_block.md \
   && echo OK
 ```
 
@@ -503,6 +507,12 @@ When --assess is passed, additionally materializes the Phase -1
 pre-mining assessment deliverable (see references/suitability_signals.md,
 references/audience_profiling.md, references/reading_path_suggestions.md).
 
+When --audience is passed, prepends the ``_audience_block.md`` fragment
+(with ``{{AUDIENCE}}`` and ``{{PROJECT_NAME}}`` substituted) to the four
+non-hub generated docs (topology, developer_guide, user_guide, tutorial)
+and, when --assess is also set, to ``assess.md``. ``README.md`` is the hub
+and is never prefixed.
+
 Existing template files in the output directory are left untouched unless
 --force is supplied, so a Phase-1 topology.md is never clobbered.
 
@@ -512,7 +522,8 @@ Usage
         --project-name "MyProject" \
         [--out docs/guides] \
         [--force] \
-        [--assess]
+        [--assess] \
+        [--audience NAME]
 
 Exit codes
 ----------
@@ -521,10 +532,13 @@ Exit codes
 """
 ```
 
-Apply this by using the `edit` tool with the existing docstring as `old_string` and the new docstring as `new_string`. Verify the edit landed by running:
+Apply this by using the `edit` tool with the existing docstring as `old_string` and the new docstring as `new_string`. The docstring below also documents the `--audience` flag (Task 7). The ASCII `--` dashes must be used; em-dashes (`—`) are not allowed (the project is ASCII-only). Verify the edit landed by running:
 
 ```bash
-rg -q 'When --assess is passed' scripts/scaffold_docs.py && echo OK
+rg -q 'When --assess is passed' scripts/scaffold_docs.py \
+  && rg -q 'When --audience is passed' scripts/scaffold_docs.py \
+  && rg -q '\-\-audience NAME' scripts/scaffold_docs.py \
+  && echo OK
 ```
 
 Expected: `OK`.
@@ -550,7 +564,7 @@ def materialize(
 
     When ``write_assess`` is True, also materialize ``assess.md`` (the
     Phase -1 deliverable). ``assess.md`` is independent of the
-    ``TEMPLATE_FILES`` list — it only appears when the user opts in via
+    ``TEMPLATE_FILES`` list -- it only appears when the user opts in via
     ``--assess``, keeping the default behaviour unchanged.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -650,7 +664,7 @@ Find the line `print(f"Done. {len(written)} written, {len(skipped)} skipped.")` 
 Verify:
 
 ```bash
-rg -q 'assess.md: {assess_status}' scripts/scaffold_docs.py && echo OK
+rg -qF 'assess.md: {assess_status}' scripts/scaffold_docs.py && echo OK
 ```
 
 Expected: `OK`.
@@ -669,7 +683,7 @@ test -f "$tmp/docs/guides/topology.md" \
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.` (no `assess.md:` line). The throwaway contains exactly 5 files; `assess.md` is absent.
+Expected: stdout contains the line `Done. 5 written, 0 skipped.` (followed by `Next: fill the {{...}} placeholders per SKILL.md workflow.` — the script always prints this final line, so it appears after the `Done.` line). No `assess.md:` line in the output. The throwaway contains exactly 5 files; `assess.md` is absent.
 
 - [ ] **Step 6: Smoke test the new flag in a throwaway directory**
 
@@ -677,13 +691,14 @@ Expected: stdout ends with `Done. 5 written, 0 skipped.` (no `assess.md:` line).
 tmp=$(mktemp -d) && git -C "$tmp" init -q
 python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --assess 2>&1
 test -f "$tmp/docs/guides/assess.md" \
-  && rg -q '\{\{PROJECT_NAME\}\}' "$tmp/docs/guides/assess.md" \
+  && ! rg -q '\{\{PROJECT_NAME\}\}' "$tmp/docs/guides/assess.md" \
+  && rg -q 'Demo' "$tmp/docs/guides/assess.md" \
   && ! rg -q '\{\{PROJECT_NAME\}\}' "$tmp/docs/guides/topology.md" \
   && echo "OK: assess.md written, PROJECT_NAME substituted"
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 6 written, 0 skipped.` followed by `  assess.md: written.`. `assess.md` exists in the output directory and contains a substituted `{{PROJECT_NAME}}`; the other 5 templates do **not** mention `{{PROJECT_NAME}}` after substitution.
+Expected: stdout contains the line `Done. 6 written, 0 skipped.` followed by `  assess.md: written.` (and the trailing `Next: fill the {{...}} placeholders per SKILL.md workflow.` line). `assess.md` exists in the output directory and contains a substituted `{{PROJECT_NAME}}`; the other 5 templates do **not** mention `{{PROJECT_NAME}}` after substitution.
 
 - [ ] **Step 7: Verify --assess is idempotent (second run skips, does not overwrite)**
 
@@ -712,12 +727,12 @@ git commit -m "feat(scaffold): add --assess flag (Phase -1)"
 **Files:**
 - Modify: `scripts/scaffold_docs.py`
   - `main` — add `--audience` to argparse; pass it to `materialize`.
-  - `materialize` — accept `audience: str | None`; when set, prepend `_audience_block.md` to each of the 5 written/skipped template files (so re-runs see the same prefix).
+  - `materialize` — accept `audience_prefix: str | None`; when set, prepend `_audience_block.md` to the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`); `README.md` is the hub and is **not** prefixed (so re-runs see the same prefix).
 - Test: scratch directory created and removed in Steps 6–7.
 
 **Interfaces:**
 - Consumes: `_audience_block.md` (created in Task 5), `{{AUDIENCE}}` substituted at write time
-- Produces: each of the 5 generated docs prefixed with the audience block when `--audience` is set; `{{AUDIENCE}}` substituted to the value passed on the CLI
+- Produces: the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) prefixed with the audience block when `--audience` is set; `README.md` is the hub and is **not** prefixed; `{{AUDIENCE}}` substituted to the value passed on the CLI
 
 - [ ] **Step 1: Add `_audience_block.md` to the template directory check (so missing templates surface as errors)**
 
@@ -740,7 +755,7 @@ rg -q 'audience_block = templates_dir / "_audience_block.md"' scripts/scaffold_d
 
 Expected: `OK`.
 
-- [ ] **Step 2: Extend `materialize` signature with `audience: str | None`**
+- [ ] **Step 2: Extend `materialize` signature with `audience_prefix: str | None`**
 
 Update the `materialize` signature to:
 
@@ -751,17 +766,17 @@ def materialize(
     project_name: str,
     force: bool,
     write_assess: bool = False,
-    audience: str | None = None,
+    audience_prefix: str | None = None,
 ) -> tuple[list[str], list[str]]:
 ```
 
 Verify:
 
 ```bash
-rg -q 'audience: str \| None = None' scripts/scaffold_docs.py && echo OK
+rg -q 'audience_prefix: str \| None = None' scripts/scaffold_docs.py && echo OK
 ```
 
-Expected: `OK`.
+Expected: `OK`. (The earlier `audience: str | None = None` form is superseded by Step 3; the final shipped file uses `audience_prefix`.)
 
 - [ ] **Step 3: Read and substitute the audience block once, then apply it to each template**
 
@@ -777,8 +792,7 @@ Replace the existing `materialize` body so that, after the `out_dir.mkdir(parent
             return [], []
         audience_prefix = (block
             .replace("{{PROJECT_NAME}}", project_name)
-            .replace("{{AUDIENCE}}", audience)
-            .replace("{{AUDIENCE_LABEL}}", audience))
+            .replace("{{AUDIENCE}}", audience))
 ```
 
 Wait — `audience_block` was defined in `main`, not `materialize`. To keep the function self-contained, pass the **path** of the audience block into `materialize`, or pass the **resolved prefix string** in. Choose the latter (no I/O inside the loop):
@@ -798,9 +812,29 @@ def materialize(
 ) -> tuple[list[str], list[str]]:
 ```
 
-Final body (the relevant block):
+Final body (the relevant block). The HUB_FILE constant lives at module scope alongside TEMPLATE_FILES (between `TEMPLATE_FILES = (...)` and `def locate_templates_dir`); README.md is the hub and is **never** prefixed, even when `audience_prefix` is set.
 
 ```python
+# The doc set is one hub (README.md, which already carries the audience
+# table) plus four spokes. The Phase -1 audience block is prepended to the
+# spokes only; the hub stays unprefixed so a re-run sees the same block.
+HUB_FILE = "README.md"
+
+def materialize(
+    templates_dir: Path,
+    out_dir: Path,
+    project_name: str,
+    force: bool,
+    write_assess: bool = False,
+    audience_prefix: str | None = None,
+) -> tuple[list[str], list[str]]:
+    """Write the missing templates; return (written, skipped) file names.
+
+    When ``write_assess`` is True, also materialize ``assess.md`` (the
+    Phase -1 deliverable). When ``audience_prefix`` is set, prefix every
+    written file (except the HUB_FILE) with it. ``assess.md`` is also
+    prefixed when both flags are set.
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
 
     written: list[str] = []
@@ -818,7 +852,7 @@ Final body (the relevant block):
         # agent can fill them with evidence from Phase 2 of the
         # skill workflow.
         text = text.replace("{{PROJECT_NAME}}", project_name)
-        if audience_prefix:
+        if audience_prefix and name != HUB_FILE:
             text = audience_prefix + text
         dst.write_text(text, encoding="utf-8")
         written.append(name)
@@ -889,8 +923,7 @@ Then, after the audience-block existence check (Step 1) and before `materialize(
             return 1
         audience_prefix = (block
             .replace("{{PROJECT_NAME}}", args.project_name)
-            .replace("{{AUDIENCE}}", args.audience)
-            .replace("{{AUDIENCE_LABEL}}", args.audience))
+            .replace("{{AUDIENCE}}", args.audience))
 ```
 
 Update the call to `materialize` so it passes the prefix:
@@ -922,7 +955,7 @@ test ! -e "$tmp/docs/guides/assess.md" \
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.` (no `assess.md:` line). `assess.md` absent; `topology.md` has no `<!-- audience:` comment.
+Expected: stdout contains the line `Done. 5 written, 0 skipped.` (followed by `Next: fill the {{...}} placeholders per SKILL.md workflow.`). No `assess.md:` line in the output. `assess.md` absent; `topology.md` has no `<!-- audience:` comment.
 
 - [ ] **Step 6: Smoke test the `--audience` flag alone**
 
@@ -930,26 +963,27 @@ Expected: stdout ends with `Done. 5 written, 0 skipped.` (no `assess.md:` line).
 tmp=$(mktemp -d) && git -C "$tmp" init -q
 python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --audience contributor 2>&1 | tail -2
 rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/topology.md" \
-  && rg -q '^\*\*Audience:\*\* contributor' "$tmp/docs/guides/README.md" \
+  && ! rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/README.md" \
+  && rg -q '^> \*\*Audience:\*\* contributor' "$tmp/docs/guides/user_guide.md" \
   && test ! -e "$tmp/docs/guides/assess.md" \
-  && echo "OK: audience block in 5 files, no assess.md"
+  && echo "OK: audience block in 4 non-hub files, README unchanged"
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 5 written, 0 skipped.`. Each of the 5 generated docs starts with `<!-- audience: contributor -->` followed by `**Audience:** contributor`. `assess.md` is absent.
+Expected: stdout contains the line `Done. 5 written, 0 skipped.` (and the trailing `Next: fill the {{...}} placeholders per SKILL.md workflow.` line). The 4 non-hub files (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) start with `<!-- audience: contributor -->` followed by the audience blockquote (`> **Audience:** contributor …`). `README.md` is **not** prefixed. `assess.md` is absent.
 
 - [ ] **Step 7: Smoke test `--assess --audience` together**
 
 ```bash
 tmp=$(mktemp -d) && git -C "$tmp" init -q
-python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --assess --audience contributor 2>&1 | tail -2
+python3 scripts/scaffold_docs.py "$tmp" --project-name Demo --force --assess --audience contributor 2>&1
 rg -q '^<!-- audience: contributor -->$' "$tmp/docs/guides/assess.md" \
   && rg -q 'Demo' "$tmp/docs/guides/assess.md" \
   && echo "OK: assess.md has audience block + PROJECT_NAME substituted"
 rm -rf "$tmp"
 ```
 
-Expected: stdout ends with `Done. 6 written, 0 skipped.` followed by `  assess.md: written.`. `assess.md` starts with the audience comment and contains the substituted project name.
+Expected: stdout contains the line `Done. 6 written, 0 skipped.` followed by `  assess.md: written.` (and the trailing `Next: fill the {{...}} placeholders per SKILL.md workflow.` line). `assess.md` starts with the audience comment and contains the substituted project name.
 
 - [ ] **Step 8: Commit**
 
@@ -979,18 +1013,18 @@ Find the line `### Phase 0 · Scope & Output Location` in `SKILL.md`. Insert the
 ```markdown
 ### Phase -1 · Pre-Mining Assessment
 
-> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises [`assess.md`](../../assets/templates/assess.md); `--audience NAME` prefixes the five generated docs with the audience block (`assets/templates/_audience_block.md`). Without either flag the skill behaves exactly as v2.
+> **Add this only when the user opts in.** Two optional scaffolder flags drive the new behaviour: `--assess` materialises `assets/templates/assess.md`; `--audience NAME` prefixes the four non-hub generated docs (`topology.md`, `developer_guide.md`, `user_guide.md`, `tutorial.md`) with the audience block (`assets/templates/_audience_block.md`) and, when `--assess` is also set, prefixes `assess.md` itself. `README.md` is the hub and is **not** prefixed. Without either flag the skill behaves exactly as v2.
 
 This phase answers four questions **before** any code is read or topology generated:
 
-1. **Is this repo worth mining?** — apply the rubric in [`references/suitability_signals.md`](../../references/suitability_signals.md). Six signals, 0–2 each, rescaled to 0–5. Hard vetoes (archived, no license + no usage hint, vendor fork, < 3 source files) skip without scoring.
-2. **Who is this for?** — pick one or two buckets from [`references/audience_profiling.md`](../../references/audience_profiling.md). Six buckets cover end-users, applied engineers, contributors, auditors, learners, and integrators.
-3. **Where to start reading?** — apply the (audience × suitability-band) matrix in [`references/reading_path_suggestions.md`](../../references/reading_path_suggestions.md).
+1. **Is this repo worth mining?** — apply the rubric in `references/suitability_signals.md`. Six signals, 0–2 each (max raw = 12), rescaled to 0–5 via `round(raw * 5 / 12, 1)`. Hard vetoes (archived, no license + no usage hint, vendor fork, < 3 source files) skip without scoring.
+2. **Who is this for?** — pick one or two buckets from `references/audience_profiling.md`. Six buckets cover end-users, applied engineers, contributors, auditors, learners, and integrators.
+3. **Where to start reading?** — apply the (audience × suitability-band) matrix in `references/reading_path_suggestions.md`.
 4. **What concrete next step?** — write 1–3 imperative actions into `assess.md` §4.
 
 #### Procedure
 
-1. **Materialise the template** with the scaffolder (writes only when `--assess` is passed; the five existing files are untouched unless `--audience` is also passed):
+1. **Materialise the template** with the scaffolder (writes `assess.md` only when `--assess` is passed; the four non-hub docs are prefixed only when `--audience` is also passed):
 
    ```bash
    python scripts/scaffold_docs.py <repo-root> \
@@ -998,11 +1032,11 @@ This phase answers four questions **before** any code is read or topology genera
        --assess [--audience <NAME>]
    ```
 
-3. **Apply the rubric.** Compute the six signals using on-disk facts only (file counts, `git log -1 --format=%ct`, `LICENSE` presence, manifest presence, `docs/` directory size, `tests/` / `examples/` presence). The agent has all of these via standard file-listing tools; no API calls.
-4. **Pick the audience** using the detection signals in `audience_profiling.md` (README first paragraph, presence of `CONTRIBUTING.md` / `examples/` / framework classifiers, etc.). Record a primary + at most one secondary.
-5. **Resolve the entry file and jump list** from the matrix in `reading_path_suggestions.md`.
-6. **Fill `assess.md`.** Substitute every `{{...}}` placeholder with the run's findings; leave any genuinely unknown fact as `> TODO(doc-miner): <missing fact>`. Write the verdict paragraph in §5.
-7. **If a hard veto fires,** replace §1 with a "Skip — and why" paragraph per the template in `suitability_signals.md`, and stop here. Do not start Phase 0.
+2. **Apply the rubric.** Compute the six signals using on-disk facts only (file counts, `git log -1 --format=%ct`, `LICENSE` presence, manifest presence, `docs/` directory size, `tests/` / `examples/` presence). The agent has all of these via standard file-listing tools; no API calls. If `git log` fails (target is not a Git repo, or has no commits), score Vitality = 0 and record the reason in `assess.md` §1.
+3. **Pick the audience** using the detection signals in `audience_profiling.md` (README first paragraph, presence of `CONTRIBUTING.md` / `examples/` / framework classifiers, etc.). Record a primary + at most one secondary.
+4. **Resolve the entry file and jump list** from the matrix in `reading_path_suggestions.md`.
+5. **Fill `assess.md`.** Substitute every `{{...}}` placeholder with the run's findings; leave any genuinely unknown fact as `> TODO(doc-miner): <missing fact>`. Write the verdict paragraph in §5.
+6. **If a hard veto fires,** replace §1 with a "Skip — and why" paragraph per the template in `suitability_signals.md`, and stop here. Do not start Phase 0.
 
 The `assess.md` file is the **first deliverable** of the new flow and is referenced from `README.md` as the entry point for the doc set.
 
@@ -1043,7 +1077,7 @@ git commit -m "docs(skill): add Phase -1 Pre-Mining Assessment section"
 
 ---
 
-## Task 9: Add `Prerequisites` section + 4 new `When NOT to Use` entries to `SKILL.md`
+## Task 9: Add `Prerequisites` section + 4 new `Do NOT trigger for:` entries (under `## When to Use`) to `SKILL.md`
 
 **Files:**
 - Modify: `SKILL.md`
@@ -1071,7 +1105,7 @@ Find the existing `## Overview` heading in `SKILL.md` and after its closing para
 ```markdown
 ## Prerequisites
 
-Tools the skill expects to be on `PATH` before Phase -1 (Pre-Mining Assessment) runs:
+Tools the skill expects on `PATH` before any of its scripts run:
 
 | Tool | Why | Min version |
 |---|---|---|
@@ -1095,7 +1129,7 @@ Expected: `OK`.
 
 - [ ] **Step 3: Add 4 new entries to the `Do NOT trigger for:` list**
 
-Find the existing 4-item bulleted list under `Do NOT trigger for:`. Append 4 new items **after** the last existing bullet (but before the next `## Workflow` heading). The exact new bullets are:
+Find the existing `Do NOT trigger for:` sentence under `## When to Use`. Convert it to a Markdown lead-in: `Do NOT trigger for any of the following:` (preserve the existing 4 cases as the first 4 bullets, then append the 4 new items below). All 8 bullets must appear in a single list before the next `## Workflow` heading. The exact new bullets to append are:
 
 ```markdown
 - The repo is **archived** or explicitly "no longer maintained" (see `references/suitability_signals.md` hard veto).
@@ -1118,7 +1152,9 @@ Expected: `OK`.
 - [ ] **Step 4: Verify the heading sequence is still monotonic (no level skips around the new sections)**
 
 ```bash
-awk '/^## Prerequisites/,/^## Workflow/' SKILL.md | ! rg -q '^### ' && echo OK
+awk '/^## Prerequisites/,/^## Workflow/' SKILL.md > /tmp/sdd-h-span.txt
+! rg -q '^### ' /tmp/sdd-h-span.txt && echo OK
+rm -f /tmp/sdd-h-span.txt
 ```
 
 Expected: `OK`. (Confirms no `###` heading sits between `## Prerequisites` and `## Workflow`.)
@@ -1255,7 +1291,7 @@ Expected: empty output (no untracked files, no staged changes).
 git log --oneline -12
 ```
 
-Expected: 11 new commits since the spec commit `0d77051`, in this order (most recent first):
+Expected: ~30 commits since the base commit `679db76` (which is the most recent commit before Phase 1 work started). The list below shows the **subset of spec-mandated commits** in their original order (most recent first); additional review-fix and lockstep commits will be interleaved in `git log` between them. The 10 spec-mandated commits, in their original order, are:
 
 1. `docs(agents): record Phase 1 fixes (Pre-Mining Assessment)`
 2. `docs(skill): add Prerequisites section + 4 When NOT to Use entries`
@@ -1284,7 +1320,7 @@ If any commit is missing or in the wrong order, return to the corresponding task
 | §5.4 suitability scoring (0–2 per signal → 0–5; 4 hard vetoes; usage-hint definition) | Task 1 (full rubric + usage-hint definition) |
 | §5.5 reading paths (audience × band matrix) | Task 3 |
 | §5.6 script changes: scaffold_docs.py adds `--assess` (default off), `--audience` (default off); gen_topology.py unchanged | Tasks 6 + 7; Tasks 6 Steps 5, 7 + 7 Steps 5–7 verify defaults |
-| §5.7 SKILL.md: Phase -1 + When NOT to Use + Prerequisites | Tasks 8 + 9 |
+| §5.7 SKILL.md: Phase -1 + Do NOT trigger for (under `## When to Use`) + Prerequisites | Tasks 8 + 9 |
 | §5.8 test plan | Tasks 6 Step 5, 6 Step 6, 6 Step 7, 7 Steps 5–7, Task 11 |
 | Open Decisions: `<angle-bracket>` slot fate — **deferred to Phase 3** (spec §9.3) ✓ | not in this plan |
 | Open Decisions: Default audience when none — **defined as "no audience block"** in §5.1 spec ✓ | Task 7 Step 5 verifies absence when no flag |
