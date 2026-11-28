@@ -4,7 +4,7 @@
 
 **Goal:** Generalize `repo-doc-miner` so it is no longer PINN/DeepXDE-shaped and is honest about what the tool can actually deliver. Three new flags on `gen_topology.py` (`--dry-run`, `--summary`, plus a structural decision on the `<angle-bracket>` slot fate), a balanced `evidence_checklist.md`, an `assets/templates/_flavor_strip.md` no-op marker for the future `--flavor` flag, a `scripts/_env.sh` for the `${REPO_DOC_MINER_HOME}` variable, a tool-vs-expectation callout, and a README refresh.
 
-**Architecture:** One new template (`_flavor_strip.md`), two new `gen_topology.py` flags (`--dry-run` and `--summary`), one new shell file (`scripts/_env.sh`), and prose-only updates to `references/evidence_checklist.md`, `assets/templates/topology.md`, `assets/templates/_audience_block.md`, and the repo `README.md`. No changes to `scaffold_docs.py` (Phase 1 already added `--assess` and `--audience`; the spec's proposed `--lang` / `--flavor` flags are documented in this plan as **deferred** because the templates' bilingual headings are now the default and de-PINN-ification is independent of any new flag — see §8.3 Open Decisions in the spec). No changes to `SKILL.md` beyond the new script reference.
+**Architecture:** One new template (`_flavor_strip.md`), two new `gen_topology.py` flags (`--dry-run` and `--summary`), one new shell file (`scripts/_env.sh`), and prose-only updates to `references/evidence_checklist.md`, `assets/templates/topology.md`, `assets/templates/_audience_block.md`, and the repo `README.md`. No changes to `scaffold_docs.py` (Phase 1 already added `--assess` and `--audience`; the spec's proposed `--lang` / `--flavor` flags are documented in this plan as **deferred** because the templates' bilingual headings are now the default and de-PINN-ification is independent of any new flag — see §9.3 Open Decisions in the spec). No changes to `SKILL.md` beyond the new script reference.
 
 **Tech Stack:** Python 3.8+ stdlib only (`argparse`, `pathlib`, `re`, `sys`, `dataclasses`), Markdown templates, plain shell.
 
@@ -30,7 +30,7 @@
 | `assets/templates/README.md` | modify | (C2 reminder — add) |
 | `README.md` | modify | Refresh first paragraph to mention Pre-Mining Assessment and link to `references/suitability_signals.md` (C13) |
 
-No changes to `scaffold_docs.py` (Phase 1 already shipped `--assess`/`--audience`; `--lang` / `--flavor` are documented as future work in the spec §8.3 Open Decisions and not part of Phase 3 scope).
+No changes to `scaffold_docs.py` (Phase 1 already shipped `--assess`/`--audience`; `--lang` / `--flavor` are documented as future work in the spec §9.3 Open Decisions and not part of Phase 3 scope).
 
 ---
 
@@ -960,7 +960,7 @@ Expected: the Phase 3 commits appear at the top, in this order (most recent firs
 | Spec requirement | Covered in task |
 |---|---|
 | §7.1 B1 Evidence checklist flavor-agnostic (8–12 rows each, Python ML de-PINN) | Task 5 |
-| §7.1 C1, C7 Templates de-PINN + language flag | Task 7 (no-op marker for `--flavor`); `--lang` flag is out of scope (deferred to a future phase per spec §8.3) |
+| §7.1 C1, C7 Templates de-PINN + language flag | Task 7 (no-op marker for `--flavor`); `--lang` flag is out of scope (deferred to a future phase per spec §9.3) |
 | §7.1 C2 Placeholder-sweep reminder | Task 6 |
 | §7.1 C5 `--dry-run` / `--summary` on `gen_topology.py` | Task 1 |
 | §7.1 C8 Skill home variable (`scripts/_env.sh`) | Task 2 |
@@ -986,4 +986,4 @@ No inconsistencies found.
 - `--flavor` flag (spec §7.2): the no-op marker is in place (Task 7); the scaffolder's argparse + actual flavor section stripping is a future task. The marker documents the extension point.
 - `references/evidence_checklist.md` Python ML section's "Operator learning" split into a separate row (mentioned in Step 2 as "we can add it later in Phase 3+").
 
-These deferrals match the spec's §8.3 Open Decisions.
+These deferrals match the spec's §9.3 Open Decisions.

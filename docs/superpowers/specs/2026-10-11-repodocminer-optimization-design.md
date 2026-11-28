@@ -309,19 +309,19 @@ Out of scope for Phase 4 (owned elsewhere or future work): runtime sequence diag
 
 ## 9. Cross-Phase Concerns
 
-### 8.1 Backwards Compatibility
+### 9.1 Backwards Compatibility
 
 - All new `scaffold_docs.py` and `gen_topology.py` flags default to current behavior. Existing smoke tests stay green.
 - Existing template `{{PROJECT_NAME}}` substitution unchanged.
 - The Phase -1 output is a standalone `assess.md` (a new template), **not** a `## 0.` section prepended to `topology.md`. The hub README carries the conditional reference; `topology.md` is unchanged.
 
-### 8.2 Documentation Discipline
+### 9.2 Documentation Discipline
 
 - Every new template file lands with the same `> TODO(doc-miner): remove any remaining {{...}} placeholders before publishing.` reminder (C2).
 - Every new references file lands with at least one concrete example (writing_style.md rule).
 - `AGENTS.md` "Fixes already landed" list updated in the same commit as each phase lands.
 
-### 8.3 Open Decisions
+### 9.3 Open Decisions
 
 | Decision | Owner | Where to decide |
 |---|---|---|
@@ -352,3 +352,4 @@ Each phase ends with a smoke test, a docs update (CHANGELOG-style entry in AGENT
 | 2026-10-11 | brainstorm session | Initial draft, 3-phase plan, user approved |
 | 2026-11-26 | persona review session | Added Phase 4 — Persona Coverage (§8); old §8/§9 renumbered to §9/§10; user approved |
 | 2026-11-26 | persona review session | Workflow Variants (Full/Lite/Progressive, §6.1 C12) pulled forward and landed ahead of Phase 2 |
+| 2026-11-28 | post-merge cleanup | SDD line merged into main (PR #3). §9 subsections renumbered 8.1/8.2/8.3 → 9.1/9.2/9.3 (collateral of the §8 Persona Coverage insertion); 27 stale `§8.3 Open Decisions` references updated to `§9.3`; `CHANGELOG.md` gains a `[3.0.0]` entry aligning it with the `SKILL.md` frontmatter version |
