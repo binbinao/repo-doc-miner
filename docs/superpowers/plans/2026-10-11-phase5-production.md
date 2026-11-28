@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Move the skill from "works in a worktree" to "works for a downstream user". Three deliverables: (1) a `Makefile` so `make test` runs the full battery; (2) a `CHANGELOG.md` documenting the four phases so users can see what changed; (3) close the remaining small polish items from Phases 1-3 (N2, N3, RES-1, C5) in one batched commit. The `--lang` flag (spec §7.2) and `<br/>`-exemption documentation are formally deferred to v4+ per the spec's §8.3 Open Decisions.
+**Goal:** Move the skill from "works in a worktree" to "works for a downstream user". Three deliverables: (1) a `Makefile` so `make test` runs the full battery; (2) a `CHANGELOG.md` documenting the four phases so users can see what changed; (3) close the remaining small polish items from Phases 1-3 (N2, N3, RES-1, C5) in one batched commit. The `--lang` flag (spec §7.2) and `<br/>`-exemption documentation are formally deferred to v4+ per the spec's §9.3 Open Decisions.
 
 **Architecture:** No new scaffolder code; one new `Makefile` (5 targets); one new `CHANGELOG.md`; one new `scripts/check_resources.py` (small stdlib script that validates the `## Resources` section in `SKILL.md` against the actual `assets/templates/`, `references/`, and `scripts/` trees); four small polish edits to existing files (`_flavor_strip.md` en-GB→en-US, `smoke.py` extra assertions, `reading_path_suggestions.md` backtick fix, `gen_topology.py` C5 cap-warning fidelity). One AGENTS.md bookkeeping entry.
 
 **Tech Stack:** Python 3.8+ stdlib only (`pathlib`, `re`, `sys`), `make` (POSIX make; no GNU-extensions required for portability).
 
-**Spec:** `docs/superpowers/specs/2026-10-11-repodocminer-optimization-design.md` — C5 cap-warning fidelity (cited in §7.1 C5), the 12-item Failure-Modes list (Phase 2 §6.1 C3), and §8.3 Open Decisions for the deferred items.
+**Spec:** `docs/superpowers/specs/2026-10-11-repodocminer-optimization-design.md` — C5 cap-warning fidelity (cited in §7.1 C5), the 12-item Failure-Modes list (Phase 2 §6.1 C3), and §9.3 Open Decisions for the deferred items.
 
 **SDD state:** workspace at `.superpowers/sdd/2026-10-11-phase5-production/`. Branch: `phase1-pre-mining-assessment` (continuing on the same feature branch). Base: `378258c` (Phase 4 ledger final-state commit).
 
@@ -601,7 +601,7 @@ After the existing Phase 4 paragraph, append:
 
 ```markdown
 
-Phase 5 (Production Readiness, 2026-10-11): moves the skill from "works in a worktree" to "works for a downstream user". A `Makefile` provides one-command test entry points (`make test` / `make smoke` / `make smoke-strict` / `make clean` / `make help`); a `CHANGELOG.md` documents the four-phase evolution (1.0.0 → 1.4.0) in Keep-a-Changelog format; a new `scripts/check_resources.py` validator confirms that `SKILL.md`'s `## Resources` section lists every file under `assets/templates/`, `references/`, and `scripts/`, surfacing drift as INFO (exit 0; the check is informational, not a build gate). Four small polish items from earlier phases are also closed: N2 (normalize `_flavor_strip.md` from en-GB to en-US), N3 (`scripts/smoke.py` now exits 2 if the Phase 3 + Phase 4 auxiliary files are missing — i.e. it fails loudly rather than silently skipping them), RES-1 (replace the literal `\`Phase -1\`` escaped-backtick pattern in `reading_path_suggestions.md` with single-quoted `'Phase -1'` so CommonMark renders it correctly), C5 (the `--max-entities` cap warning now prints under `--verbose` only, matching the `--max-edges` behaviour and the docstring's "verbose" qualifier). The `--lang` scaffolder flag (spec §7.2) and `<br/>` exemption documentation remain formally deferred to v4+ per spec §8.3 Open Decisions.
+Phase 5 (Production Readiness, 2026-10-11): moves the skill from "works in a worktree" to "works for a downstream user". A `Makefile` provides one-command test entry points (`make test` / `make smoke` / `make smoke-strict` / `make clean` / `make help`); a `CHANGELOG.md` documents the four-phase evolution (1.0.0 → 1.4.0) in Keep-a-Changelog format; a new `scripts/check_resources.py` validator confirms that `SKILL.md`'s `## Resources` section lists every file under `assets/templates/`, `references/`, and `scripts/`, surfacing drift as INFO (exit 0; the check is informational, not a build gate). Four small polish items from earlier phases are also closed: N2 (normalize `_flavor_strip.md` from en-GB to en-US), N3 (`scripts/smoke.py` now exits 2 if the Phase 3 + Phase 4 auxiliary files are missing — i.e. it fails loudly rather than silently skipping them), RES-1 (replace the literal `\`Phase -1\`` escaped-backtick pattern in `reading_path_suggestions.md` with single-quoted `'Phase -1'` so CommonMark renders it correctly), C5 (the `--max-entities` cap warning now prints under `--verbose` only, matching the `--max-edges` behaviour and the docstring's "verbose" qualifier). The `--lang` scaffolder flag (spec §7.2) and `<br/>` exemption documentation remain formally deferred to v4+ per spec §9.3 Open Decisions.
 ```
 
 - [ ] **Step 3: Verify the new paragraph is in place**
@@ -710,12 +710,12 @@ Expected: the Phase 5 commits appear at the top, in this order (most recent firs
 
 | Item | Phase deferred | Phase closed | Notes |
 |---|---|---|---|
-| `--lang` flag (spec §7.2) | Phase 3 | **v4+ (spec §8.3)** | Bilingual headings are the current default; per-language template variants require either translation or selective stripping. |
+| `--lang` flag (spec §7.2) | Phase 3 | **v4+ (spec §9.3)** | Bilingual headings are the current default; per-language template variants require either translation or selective stripping. |
 | N2 (`_flavor_strip.md` en-GB/en-US) | Phase 3 | **Phase 5 Task 4** | Closed. |
 | N3 (smoke.py missing assertions for `_env.sh` / `_flavor_strip.md`) | Phase 3 | **Phase 5 Task 4** | Closed via the N3 block. |
 | RES-1 (escaped backticks in `reading_path_suggestions.md`) | Phase 1 | **Phase 5 Task 4** | Closed. |
 | C5 (cap-warning fidelity) | Phase 3 | **Phase 5 Task 4** | Closed. |
-| `<br/>` exemption documentation in AGENTS.md | Phase 3 | **v4+ (spec §8.3)** | The Mermaid/HTML `<br/>` is correct and used in only one place (the §1 prose of `topology.md`); a future docstring touchup can cover it. |
+| `<br/>` exemption documentation in AGENTS.md | Phase 3 | **v4+ (spec §9.3)** | The Mermaid/HTML `<br/>` is correct and used in only one place (the §1 prose of `topology.md`); a future docstring touchup can cover it. |
 | C1/C7 scaffolder `--flavor` arg wiring | Phase 3 | **Phase 4 Task 1** | Closed. |
 | Phase 2 R3 (`--strict` unreachable) | Phase 2 | **Phase 4 Task 3** | Closed. |
 
@@ -729,7 +729,7 @@ No inconsistencies found.
 
 **Open items (deferred to a future release):**
 
-- `--lang` flag (spec §7.2) and the `<br/>` exemption documentation (Phase 3 N4): both are deferred to v4+ per the spec's §8.3 Open Decisions.
+- `--lang` flag (spec §7.2) and the `<br/>` exemption documentation (Phase 3 N4): both are deferred to v4+ per the spec's §9.3 Open Decisions.
 - The remaining 6 entries in `references/evidence_checklist.md`'s "Tool vs. expectation" callout's "It does not detect" list (cross-module call graphs, dynamic dispatch, runtime plugin loading, generated artifacts, dependency lock files, code execution) are aspirational features, not defects; documenting them as known limitations is a docs polish, not a code change.
 
-These deferrals match the spec's §8.3 Open Decisions.
+These deferrals match the spec's §9.3 Open Decisions.

@@ -660,7 +660,7 @@ After the existing Phase 3 paragraph, append:
 
 ```markdown
 
-Phase 4 (Wiring Up & Real-World Validation, 2026-10-11): closes the last open Phase 3 spec items in a focused way. `scaffold_docs.py` gains the `--flavor FLAVOR_NAME` flag (default `general`) which strips `<!-- flavor: NAME -->` ... `<!-- /flavor: NAME -->` blocks from the 5 core templates + `assess.md`, wiring up the `_flavor_strip.md` contract that was a no-op marker through Phase 3 (C1/C7); `assets/templates/developer_guide.md` gains one demonstrative `<!-- flavor: backend -->` block so the stripper has a real block to remove (the other 4 templates remain flavor-free); `scripts/smoke.py` gains `--guides-dir PATH` so `--strict` is now meaningful against a real `docs/guides/` directory (Phase 2 re-reviewer R3 closed: the throwaway-only audit was structurally unreachable, so a failable real-dir audit is added); the README first paragraph is polished — the "four questions" promise now matches `assess.md`'s actual content, and the `docs/guides/` hard-code is now described as the default behind `scaffold_docs.py --out PATH`; a real-world validation pass against `tiangolo/fastapi` (commit at clone time) confirms the skill works end-to-end on a non-trivial external Python library — `gen_topology.py` detects the expected entities + edges, `scaffold_docs.py --assess --audience` materialises 6 files with the audience blockquote on line 1 of `assess.md`, and `smoke.py --strict --guides-dir` exits 0 against the scaffolded output. The other Phase 3 deferred items (the `--lang` flag, the N2 en-GB/en-US mix in `_flavor_strip.md`) remain formally deferred to a future release per the spec's §8.3 Open Decisions.
+Phase 4 (Wiring Up & Real-World Validation, 2026-10-11): closes the last open Phase 3 spec items in a focused way. `scaffold_docs.py` gains the `--flavor FLAVOR_NAME` flag (default `general`) which strips `<!-- flavor: NAME -->` ... `<!-- /flavor: NAME -->` blocks from the 5 core templates + `assess.md`, wiring up the `_flavor_strip.md` contract that was a no-op marker through Phase 3 (C1/C7); `assets/templates/developer_guide.md` gains one demonstrative `<!-- flavor: backend -->` block so the stripper has a real block to remove (the other 4 templates remain flavor-free); `scripts/smoke.py` gains `--guides-dir PATH` so `--strict` is now meaningful against a real `docs/guides/` directory (Phase 2 re-reviewer R3 closed: the throwaway-only audit was structurally unreachable, so a failable real-dir audit is added); the README first paragraph is polished — the "four questions" promise now matches `assess.md`'s actual content, and the `docs/guides/` hard-code is now described as the default behind `scaffold_docs.py --out PATH`; a real-world validation pass against `tiangolo/fastapi` (commit at clone time) confirms the skill works end-to-end on a non-trivial external Python library — `gen_topology.py` detects the expected entities + edges, `scaffold_docs.py --assess --audience` materialises 6 files with the audience blockquote on line 1 of `assess.md`, and `smoke.py --strict --guides-dir` exits 0 against the scaffolded output. The other Phase 3 deferred items (the `--lang` flag, the N2 en-GB/en-US mix in `_flavor_strip.md`) remain formally deferred to a future release per the spec's §9.3 Open Decisions.
 ```
 
 - [ ] **Step 3: Verify the new paragraph is in place**
@@ -759,7 +759,7 @@ Expected: the Phase 4 commits appear at the top, in this order (most recent firs
 | Spec requirement | Covered in task |
 |---|---|
 | §7.1 C1, C7 Templates de-PINN + language flag (the `--flavor` half) | Task 1 (scaffolder flag) + Task 2 (demo block) |
-| §7.1 C7 `--lang` flag | **Deferred** (per spec §8.3 Open Decisions; bilingual headings are the default; adding per-language template variants is a v4+ effort) |
+| §7.1 C7 `--lang` flag | **Deferred** (per spec §9.3 Open Decisions; bilingual headings are the default; adding per-language template variants is a v4+ effort) |
 | Phase 2 R3 (`--strict` structurally unreachable) | Task 3 (`--guides-dir` makes `--strict` meaningful) |
 | Phase 3 N1 (README polish) | Task 5 |
 | Phase 3 N3 (smoke.py missing _env.sh / _flavor_strip.md assertions) | **Deferred** (polish; smoke.py's --check-only path is now adequate for the new files via the new --guides-dir flag — `--check-only` against a worktree's `assets/templates/_flavor_strip.md` or `scripts/_env.sh` can be added in a follow-up if needed) |
@@ -779,9 +779,9 @@ No inconsistencies found.
 
 **Open items (deferred to a future release):**
 
-- `--lang` flag (spec §7.2): would require per-language template variants or a translation pass. Bilingual headings are the current default; per the spec §8.3 Open Decisions, this is a v4+ effort.
+- `--lang` flag (spec §7.2): would require per-language template variants or a translation pass. Bilingual headings are the current default; per the spec §9.3 Open Decisions, this is a v4+ effort.
 - `assets/templates/_flavor_strip.md` en-GB/en-US mix (N2): trivial polish; left for a future commit.
 - `smoke.py` adding explicit `--check-only` assertions for `_env.sh` and `_flavor_strip.md` (N3): the new `--guides-dir` path subsumes most of this; explicit assertions can be added later.
 - C5 cap warning-fidelity polish (the original audit finding: "if running without `--verbose`, only entity cap prints a warning"): the Phase 3 fix was to make the docstring truthful; the actual code change is one extra `print(..., file=sys.stderr)` and a help-text update. Left for a future commit.
 
-These deferrals match the spec's §8.3 Open Decisions.
+These deferrals match the spec's §9.3 Open Decisions.

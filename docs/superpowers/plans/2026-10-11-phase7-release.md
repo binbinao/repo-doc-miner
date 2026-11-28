@@ -289,7 +289,7 @@ After the existing Phase 6 paragraph, append:
 
 ```markdown
 
-Phase 7 (2nd Real-World Validation & v1.4.0 Release, 2026-10-11): closes the optimization plan with a 2nd real-world validation pass and the v1.4.0 release tag. `pallets/flask` is mined end-to-end with the same flags used in the Phase 4 FastAPI run (`--assess --audience contributor`); `gen_topology.py --summary` detects the Flask `src/` package as a `py-package`; `scaffold_docs.py --assess --audience` materialises 6 files; `smoke.py --strict --guides-dir` exits 0 against the scaffolded output. The Flask end-to-end log lives at `.superpowers/sdd/2026-10-11-phase7-release/phase7-flask-validation-log.md` and confirms that the Phase 1-6 changes generalise to a second non-trivial Python library with a different shape (single package, no Rust extension, no async-first design). A new `make validate` target in the `Makefile` runs the full smoke battery + a `--strict --guides-dir` audit against a throwaway; downstream users can extend it to clone their own target repo. `CHANGELOG.md` gains a `Release notes (2026-10-11)` section listing the headline items. `git tag -a v1.4.0` is created pointing at the current HEAD. The optimization plan is closed; future work (e.g. `--lang` H2 translations, `<br/>` exemption docs, `references/audience_profiling.md` `_OR_NONE` follow-up) is tracked in spec §8.3 Open Decisions for v4+.
+Phase 7 (2nd Real-World Validation & v1.4.0 Release, 2026-10-11): closes the optimization plan with a 2nd real-world validation pass and the v1.4.0 release tag. `pallets/flask` is mined end-to-end with the same flags used in the Phase 4 FastAPI run (`--assess --audience contributor`); `gen_topology.py --summary` detects the Flask `src/` package as a `py-package`; `scaffold_docs.py --assess --audience` materialises 6 files; `smoke.py --strict --guides-dir` exits 0 against the scaffolded output. The Flask end-to-end log lives at `.superpowers/sdd/2026-10-11-phase7-release/phase7-flask-validation-log.md` and confirms that the Phase 1-6 changes generalise to a second non-trivial Python library with a different shape (single package, no Rust extension, no async-first design). A new `make validate` target in the `Makefile` runs the full smoke battery + a `--strict --guides-dir` audit against a throwaway; downstream users can extend it to clone their own target repo. `CHANGELOG.md` gains a `Release notes (2026-10-11)` section listing the headline items. `git tag -a v1.4.0` is created pointing at the current HEAD. The optimization plan is closed; future work (e.g. `--lang` H2 translations, `<br/>` exemption docs, `references/audience_profiling.md` `_OR_NONE` follow-up) is tracked in spec §9.3 Open Decisions for v4+.
 ```
 
 - [ ] **Step 3: Verify the new paragraph is in place**
@@ -400,7 +400,7 @@ Expected: the Phase 7 commits appear at the top, in this order (most recent firs
 - Production readiness: `Makefile` (5 targets), `CHANGELOG.md` (1.0.0 → 1.4.0), `scripts/check_resources.py` (drift detector), `git tag v1.4.0`.
 - Tooling polish: 4 deferred items closed (N2, N3, RES-1, C5).
 
-**Items explicitly deferred to v4+ (per spec §8.3 Open Decisions):**
+**Items explicitly deferred to v4+ (per spec §9.3 Open Decisions):**
 
 - `--lang` H2 translations (the H1 is rewritten; H2 sections remain English-only)
 - `<br/>` exemption documentation in `topology.md` §1 (the Mermaid/HTML is correct; only one place uses it)
@@ -418,4 +418,4 @@ No inconsistencies found.
 
 **Open items (closed across phases 1-7):**
 
-- The optimization plan is closed as of v1.4.0. Future work is tracked in spec §8.3 Open Decisions and is intentionally deferred to a future release.
+- The optimization plan is closed as of v1.4.0. Future work is tracked in spec §9.3 Open Decisions and is intentionally deferred to a future release.

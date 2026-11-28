@@ -367,7 +367,7 @@ After the existing Phase 5 paragraph, append:
 
 ```markdown
 
-Phase 6 (Language & Drift Fixes, 2026-10-11): closes the last 2 deferred items from the spec. `scaffold_docs.py` gains the `--lang {bilingual,en,zh}` flag (default `bilingual`) which picks the H1 heading language for the 5 core templates — `--lang en` rewrites the bilingual H1 to English-only (`# Demo Developer Guide`), `--lang zh` rewrites it to Chinese-only (`# Demo 开发者文档`), `--lang bilingual` (default) is byte-identical to the pre-Phase-6 output. H2 sections are intentionally not rewritten (the templates don't carry parallel Chinese H2s; adding them is a v4+ effort). The SKILL.md `## Resources` section now lists every shipped file (closing the 3 disk-only entries that `scripts/check_resources.py` had been reporting since Phase 5: `assets/templates/_flavor_strip.md`, `references/edge_refinement.md`, and `scripts/check_resources.py` itself); `check_resources.py` now reports zero INFO drift. The `<br/>` exemption documentation in `topology.md` §1 and the `references/audience_profiling.md` `_OR_NONE` suffix-doc update (Phase 1 B2-6 follow-up) remain formally deferred per spec §8.3.
+Phase 6 (Language & Drift Fixes, 2026-10-11): closes the last 2 deferred items from the spec. `scaffold_docs.py` gains the `--lang {bilingual,en,zh}` flag (default `bilingual`) which picks the H1 heading language for the 5 core templates — `--lang en` rewrites the bilingual H1 to English-only (`# Demo Developer Guide`), `--lang zh` rewrites it to Chinese-only (`# Demo 开发者文档`), `--lang bilingual` (default) is byte-identical to the pre-Phase-6 output. H2 sections are intentionally not rewritten (the templates don't carry parallel Chinese H2s; adding them is a v4+ effort). The SKILL.md `## Resources` section now lists every shipped file (closing the 3 disk-only entries that `scripts/check_resources.py` had been reporting since Phase 5: `assets/templates/_flavor_strip.md`, `references/edge_refinement.md`, and `scripts/check_resources.py` itself); `check_resources.py` now reports zero INFO drift. The `<br/>` exemption documentation in `topology.md` §1 and the `references/audience_profiling.md` `_OR_NONE` suffix-doc update (Phase 1 B2-6 follow-up) remain formally deferred per spec §9.3.
 ```
 
 - [ ] **Step 3: Verify the new paragraph is in place**
@@ -474,8 +474,8 @@ Expected: the Phase 6 commits appear at the top, in this order (most recent firs
 |---|---|---|---|
 | `--lang` scaffolder flag (spec §7.2) | Phase 3 | **Phase 6 Task 1** | Closed for the H1 line. H2 sections remain English-only (a future v4+ effort). |
 | SKILL.md Resources drift (3 disk-only files) | Phase 5 | **Phase 6 Task 2** | Closed; `check_resources.py` now reports zero drift. |
-| `<br/>` exemption documentation in `topology.md` §1 | Phase 3 | **v4+ (spec §8.3)** | The Mermaid/HTML `<br/>` is correct and used in only one place; a future docstring touchup can cover it. |
-| `references/audience_profiling.md` `_OR_NONE` suffix-doc update (Phase 1 B2-6 follow-up) | Phase 1 | **v4+ (spec §8.3)** | The `_OR_NONE` and `_RELATIVE` suffix conventions were added in Phase 1; the docs that use them are short enough to be self-documenting. |
+| `<br/>` exemption documentation in `topology.md` §1 | Phase 3 | **v4+ (spec §9.3)** | The Mermaid/HTML `<br/>` is correct and used in only one place; a future docstring touchup can cover it. |
+| `references/audience_profiling.md` `_OR_NONE` suffix-doc update (Phase 1 B2-6 follow-up) | Phase 1 | **v4+ (spec §9.3)** | The `_OR_NONE` and `_RELATIVE` suffix conventions were added in Phase 1; the docs that use them are short enough to be self-documenting. |
 
 **Type / name consistency check:**
 
@@ -487,6 +487,6 @@ No inconsistencies found.
 
 **Open items (deferred to a future release):**
 
-- The `<br/>` exemption documentation and the `_OR_NONE`/`_RELATIVE` suffix-doc update are both small polish items left for a future commit per spec §8.3.
+- The `<br/>` exemption documentation and the `_OR_NONE`/`_RELATIVE` suffix-doc update are both small polish items left for a future commit per spec §9.3.
 
-These deferrals match the spec's §8.3 Open Decisions.
+These deferrals match the spec's §9.3 Open Decisions.
